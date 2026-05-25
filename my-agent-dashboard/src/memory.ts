@@ -5,39 +5,41 @@ let db: Database.Database | null = null;
 
 function getDb() {
   if (!db) {
-    db = new Database(config.dbPath);
-    // Enable WAL mode for better performance/concurrency
+    db = new Database(config.dbPath, { readonly: true });
     db.pragma('journal_mode = WAL');
   }
   return db;
 }
 
-// Tier 1: Core Memory
-export function getCoreMemory(): string {
+// State meta — key/value store
+export function getStateMeta(): string {
   const dbInstance = getDb();
-  const rows = dbInstance.prepare('SELECT key, value FROM core_memory ORDER BY key').all() as any[];
-  if (!rows.length) return '(no facts stored yet)';
+  const rows = dbInstance.prepare('SELECT key, value FROM state_meta ORDER BY key').all() as any[];
+  if (!rows.length) return '(no state data stored yet)';
   return rows.map(r => `• ${r.key}: ${r.value}`).join('\n');
 }
 
-// Tier 2: Conversation Log
-export function getRecentMessages(chatId: string, limit = 20) {
+// Recent messages for a session
+export function getRecentMessages(sessionId: string, limit = 100) {
   const dbInstance = getDb();
   const rows = dbInstance.prepare(
-    `SELECT role, content FROM messages
-     WHERE chat_id = ? ORDER BY id DESC LIMIT ?`
-  ).all(chatId, limit) as any[];
+    `SELECT role, content, tool_name, timestamp
+     FROM messages
+     WHERE session_id = ? ORDER BY timestamp DESC LIMIT ?`
+  ).all(sessionId, limit) as any[];
   return rows.reverse();
 }
 
-export function getSummary(chatId: string): string | null {
+// Sessions list (most recent first)
+export function getSessions(limit = 50) {
   const dbInstance = getDb();
-  const row = dbInstance.prepare('SELECT summary FROM summaries WHERE chat_id = ?')
-    .get(chatId) as any;
-  return row?.summary ?? null;
+  const rows = dbInstance.prepare(
+    `SELECT id, title, source, model, started_at, ended_at,
+            message_count, input_tokens, output_tokens, estimated_cost_usd
+     FROM sessions ORDER BY started_at DESC LIMIT ?`
+  ).all(limit) as any[];
+  return rows;
 }
-
-// Add more functions here to fetch todos, skills, etc., if they are stored in the DB
 
 export function closeDb() {
   if (db) {

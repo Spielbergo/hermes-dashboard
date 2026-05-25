@@ -3,7 +3,7 @@ import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { config } from './config.js';
-import { getCoreMemory, getRecentMessages, getSummary, closeDb } from './memory.js';
+import { getStateMeta, getRecentMessages, getSessions, closeDb } from './memory.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const frontendDir = path.resolve(__dirname, '..', 'frontend');
@@ -40,17 +40,17 @@ app.use('/api', (req, res, next) => {
 // API Endpoints
 app.get('/api/memory', (_, res) => {
   try {
-    res.json({ memory: getCoreMemory() });
+    res.json({ memory: getStateMeta() });
   } catch (error: any) {
-    console.error('Error fetching core memory:', error);
-    res.status(500).json({ error: `Failed to fetch core memory: ${error.message}` });
+    console.error('Error fetching state meta:', error);
+    res.status(500).json({ error: `Failed to fetch state: ${error.message}` });
   }
 });
 
-app.get('/api/recent-messages/:chatId', (req, res) => {
+app.get('/api/recent-messages/:sessionId', (req, res) => {
   try {
-    const { chatId } = req.params;
-    const messages = getRecentMessages(chatId, 100);
+    const { sessionId } = req.params;
+    const messages = getRecentMessages(sessionId, 100);
     res.json({ messages });
   } catch (error: any) {
     console.error('Error fetching recent messages:', error);
@@ -58,14 +58,13 @@ app.get('/api/recent-messages/:chatId', (req, res) => {
   }
 });
 
-app.get('/api/summaries/:chatId', (req, res) => {
+app.get('/api/sessions', (_, res) => {
   try {
-    const { chatId } = req.params;
-    const summary = getSummary(chatId);
-    res.json({ summary: summary ?? '(no summary available)' });
+    const sessions = getSessions(50);
+    res.json({ sessions });
   } catch (error: any) {
-    console.error('Error fetching summary:', error);
-    res.status(500).json({ error: `Failed to fetch summary: ${error.message}` });
+    console.error('Error fetching sessions:', error);
+    res.status(500).json({ error: `Failed to fetch sessions: ${error.message}` });
   }
 });
 

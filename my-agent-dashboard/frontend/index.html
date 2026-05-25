@@ -290,21 +290,31 @@
   </header>
 
   <div class="tabs">
-    <button class="tab active" data-tab="memory">Core Memory</button>
+    <button class="tab active" data-tab="memory">State</button>
+    <button class="tab" data-tab="sessions">Sessions</button>
     <button class="tab" data-tab="messages">Messages</button>
-    <button class="tab" data-tab="summary">Summary</button>
   </div>
 
   <main>
-    <!-- Memory panel -->
+    <!-- State panel -->
     <div class="panel active" id="panel-memory">
       <div class="card">
-        <div class="card-title">Core Memory
+        <div class="card-title">Agent State
           <button class="refresh-btn" data-refresh="memory">↻ Refresh</button>
         </div>
         <div class="memory-content" id="memory-content">
           <span class="state-msg">Loading…</span>
         </div>
+      </div>
+    </div>
+
+    <!-- Sessions panel -->
+    <div class="panel" id="panel-sessions">
+      <div class="card">
+        <div class="card-title">Recent Sessions
+          <button class="refresh-btn" data-refresh="sessions">↻ Refresh</button>
+        </div>
+        <div id="sessions-list"><span class="state-msg">Loading…</span></div>
       </div>
     </div>
 
@@ -314,36 +324,16 @@
         <div class="card-title">Fetch Messages</div>
         <div class="chat-input-row">
           <div class="field">
-            <label for="chat-id-input">Chat ID</label>
-            <input id="chat-id-input" type="text" placeholder="e.g. 123456789" />
+            <label for="chat-id-input">Session ID</label>
+            <input id="chat-id-input" type="text" placeholder="Click a session above or paste ID" />
           </div>
           <button class="btn" id="fetch-messages-btn" style="min-width:100px">Fetch</button>
         </div>
       </div>
       <div class="card">
-        <div class="card-title">Recent Messages</div>
+        <div class="card-title">Messages</div>
         <div class="message-list" id="message-list">
-          <span class="state-msg">Enter a Chat ID above and click Fetch.</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Summary panel -->
-    <div class="panel" id="panel-summary">
-      <div class="card">
-        <div class="card-title">Fetch Summary</div>
-        <div class="chat-input-row">
-          <div class="field">
-            <label for="summary-chat-id">Chat ID</label>
-            <input id="summary-chat-id" type="text" placeholder="e.g. 123456789" />
-          </div>
-          <button class="btn" id="fetch-summary-btn" style="min-width:100px">Fetch</button>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-title">Summary</div>
-        <div class="summary-content" id="summary-content">
-          <span class="state-msg">Enter a Chat ID above and click Fetch.</span>
+          <span class="state-msg">Select a session above or enter a Session ID.</span>
         </div>
       </div>
     </div>
@@ -389,6 +379,7 @@
       saveSession();
       showApp();
       loadMemory();
+      loadSessions();
     } catch {
       loginError.style.display = 'block';
     } finally {
@@ -437,6 +428,48 @@
 
   document.querySelector('[data-refresh="memory"]').addEventListener('click', loadMemory);
 
+  // ── Sessions ──
+  async function loadSessions() {
+    const list = document.getElementById('sessions-list');
+    list.innerHTML = '<span class="state-msg">Loading…</span>';
+    try {
+      const data = await api('/api/sessions');
+      if (!data.sessions.length) {
+        list.innerHTML = '<span class="state-msg">No sessions found.</span>';
+        return;
+      }
+      list.innerHTML = '';
+      data.sessions.forEach(s => {
+        const started = s.started_at ? new Date(s.started_at * 1000).toLocaleString() : '—';
+        const cost = s.estimated_cost_usd != null ? `$${Number(s.estimated_cost_usd).toFixed(4)}` : '—';
+        const title = s.title || s.id.slice(0, 16) + '…';
+        const div = document.createElement('div');
+        div.style.cssText = 'padding:0.75rem 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:1rem;';
+        div.innerHTML = `
+          <div style="flex:1;min-width:0">
+            <div style="font-size:0.88rem;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(title)}</div>
+            <div style="font-size:0.76rem;color:var(--text-dim);margin-top:0.2rem">${escapeHtml(s.source || '')} &middot; ${escapeHtml(s.model || '')} &middot; ${s.message_count ?? 0} msgs &middot; ${cost}</div>
+            <div style="font-size:0.76rem;color:var(--text-dim)">${started}</div>
+          </div>
+          <button class="btn" style="font-size:0.78rem;padding:0.3rem 0.6rem;min-width:80px" data-session-id="${escapeHtml(s.id)}">View</button>
+        `;
+        div.querySelector('button').addEventListener('click', () => {
+          document.getElementById('chat-id-input').value = s.id;
+          document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+          document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+          document.querySelector('[data-tab="messages"]').classList.add('active');
+          document.getElementById('panel-messages').classList.add('active');
+          document.getElementById('fetch-messages-btn').click();
+        });
+        list.appendChild(div);
+      });
+    } catch (e) {
+      list.innerHTML = `<span class="state-msg" style="color:var(--error)">Error: ${e.message}</span>`;
+    }
+  }
+
+  document.querySelector('[data-refresh="sessions"]').addEventListener('click', loadSessions);
+
   // ── Messages ──
   document.getElementById('fetch-messages-btn').addEventListener('click', async () => {
     const chatId = document.getElementById('chat-id-input').value.trim();
@@ -452,8 +485,9 @@
       list.innerHTML = '';
       data.messages.forEach(msg => {
         const div = document.createElement('div');
-        div.className = `message ${msg.role}`;
-        div.innerHTML = `<div class="role">${msg.role}</div>${escapeHtml(msg.content)}`;
+        div.className = `message ${msg.role === 'user' ? 'user' : 'assistant'}`;
+        const label = msg.role === 'tool' ? `tool: ${escapeHtml(msg.tool_name || '')}` : msg.role;
+        div.innerHTML = `<div class="role">${label}</div>${escapeHtml(msg.content || '(no content)')}`;
         list.appendChild(div);
       });
     } catch (e) {
@@ -461,19 +495,7 @@
     }
   });
 
-  // ── Summary ──
-  document.getElementById('fetch-summary-btn').addEventListener('click', async () => {
-    const chatId = document.getElementById('summary-chat-id').value.trim();
-    if (!chatId) return;
-    const el = document.getElementById('summary-content');
-    el.innerHTML = '<span class="state-msg">Loading…</span>';
-    try {
-      const data = await api(`/api/summaries/${encodeURIComponent(chatId)}`);
-      el.textContent = data.summary;
-    } catch (e) {
-      el.innerHTML = `<span class="state-msg" style="color:var(--error)">Error: ${e.message}</span>`;
-    }
-  });
+  // ── Summary removed — replaced by Sessions ──
 
   // ── XSS helper ──
   function escapeHtml(str) {
@@ -489,7 +511,7 @@
   if (savedToken) {
     token = savedToken;
     api('/api/memory')
-      .then(() => { showApp(); loadMemory(); })
+      .then(() => { showApp(); loadMemory(); loadSessions(); })
       .catch(() => { clearSession(); });
   }
 </script>

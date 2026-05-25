@@ -2,22 +2,15 @@ services:
   dashboard:
     build: .
     restart: unless-stopped
-    networks:
-      - traefik-public
     environment:
       - DASHBOARD_TOKEN=${DASHBOARD_TOKEN}
       - PORT=5173
-      - DB_PATH=/data/memory.db
+      - DB_PATH=/data/state.db
     volumes:
-      - /docker/hermes-agent-tshi/data:/data:ro  # Bind mount Hermes's data dir, read-only
+      - /docker/hermes-agent-tshi/data:/data:ro
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.dashboard.rule=Host(`dashboard.yourdomain.com`)"
-      - "traefik.http.routers.dashboard.entrypoints=websecure"
-      - "traefik.http.routers.dashboard.tls=true"
-      - "traefik.http.routers.dashboard.tls.certresolver=letsencrypt"
-      - "traefik.http.services.dashboard.loadbalancer.server.port=5173"
-
-networks:
-  traefik-public:
-    external: true
+      - "traefik.http.routers.my-agent-dashboard.entrypoints=websecure"
+      - "traefik.http.routers.my-agent-dashboard.rule=Host(`my-agent-dashboard.srv1694637.hstgr.cloud`)"
+      - "traefik.http.routers.my-agent-dashboard.tls.certresolver=letsencrypt"
+      - "traefik.http.services.my-agent-dashboard.loadbalancer.server.port=5173"
