@@ -1,0 +1,15 @@
+[build]
+  publish = "frontend"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src *;"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
