@@ -2,18 +2,28 @@ services:
   dashboard:
     build: .
     restart: unless-stopped
-    ports:
-      - "127.0.0.1:5173:5173"   # Only expose to localhost — nginx proxies externally
+    networks:
+      - traefik-public
     environment:
       - DASHBOARD_TOKEN=${DASHBOARD_TOKEN}
       - PORT=5173
-      - DB_PATH=/data/memory.db  # Mounted from Hermes's data volume
+      - DB_PATH=/data/memory.db
     volumes:
       - hermes_data:/data:ro     # Read-only mount of Hermes's data volume
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.dashboard.rule=Host(`dashboard.yourdomain.com`)"
+      - "traefik.http.routers.dashboard.entrypoints=websecure"
+      - "traefik.http.routers.dashboard.tls=true"
+      - "traefik.http.routers.dashboard.tls.certresolver=letsencrypt"
+      - "traefik.http.services.dashboard.loadbalancer.server.port=5173"
 
 # Attach to the named volume Hermes already created.
-# Run: docker volume ls   to find the exact volume name and update below.
 volumes:
   hermes_data:
     external: true
-    name: hermes-agent_data      # <-- replace with your actual volume name
+    name: hermes-webui-8qvh_hermes-home  # <-- update if memory.db is in a different volume
+
+networks:
+  traefik-public:
+    external: true
