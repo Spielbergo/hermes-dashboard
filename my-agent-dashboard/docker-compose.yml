@@ -9,7 +9,7 @@ services:
       - PORT=5173
       - DB_PATH=/data/memory.db
     volumes:
-      - hermes_data:/data:ro     # Read-only mount of Hermes's data volume
+      - /docker/hermes-agent-tshi/data:/data:ro  # Bind mount Hermes's data dir, read-only
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.dashboard.rule=Host(`dashboard.yourdomain.com`)"
@@ -17,12 +17,6 @@ services:
       - "traefik.http.routers.dashboard.tls=true"
       - "traefik.http.routers.dashboard.tls.certresolver=letsencrypt"
       - "traefik.http.services.dashboard.loadbalancer.server.port=5173"
-
-# Attach to the named volume Hermes already created.
-volumes:
-  hermes_data:
-    external: true
-    name: hermes-webui-8qvh_hermes-home  # <-- update if memory.db is in a different volume
 
 networks:
   traefik-public:
