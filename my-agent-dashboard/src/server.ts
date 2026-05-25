@@ -71,7 +71,7 @@ app.get('/api/sessions', (_, res) => {
 // Add more endpoints here for skills, todos, etc., as needed.
 
 // Fallback: serve index.html for any non-API route (SPA catch-all)
-app.get('*', (_, res) => res.sendFile(path.join(frontendDir, 'index.html')));
+app.get('/{*splat}', (_, res) => res.sendFile(path.join(frontendDir, 'index.html')));
 
 const server = app.listen(config.port, '0.0.0.0', () => {
   console.log(`Dashboard server listening at http://0.0.0.0:${config.port}`);
