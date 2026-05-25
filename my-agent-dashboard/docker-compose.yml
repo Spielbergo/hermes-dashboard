@@ -10,6 +10,7 @@ services:
       - /docker/hermes-agent-tshi/data:/data:ro
     labels:
       - "traefik.enable=true"
+      - "traefik.docker.network=my-agent-dashboard_default"
       - "traefik.http.routers.my-agent-dashboard.entrypoints=websecure"
       - "traefik.http.routers.my-agent-dashboard.rule=Host(`my-agent-dashboard.srv1694637.hstgr.cloud`)"
       - "traefik.http.routers.my-agent-dashboard.tls.certresolver=letsencrypt"
