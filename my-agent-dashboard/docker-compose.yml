@@ -6,12 +6,12 @@ services:
       - DASHBOARD_TOKEN=${DASHBOARD_TOKEN}
       - PORT=5173
       # Multi-agent: semicolon-separated entries of "id:Display Name:/mount/path/state.db"
-      # The webui agent path may differ — check with: docker inspect hermes-webui-8qvh-* | grep /data
       - AGENTS=cli:Hermes CLI:/data/cli/state.db;webui:Hermes WebUI:/data/webui/state.db
     volumes:
+      # CLI agent — bind mount (host path)
       - /docker/hermes-agent-tshi/data:/data/cli:ro
-      # Update this path if hermes-webui-8qvh uses a different host directory
-      - /docker/hermes-webui-8qvh/data:/data/webui:ro
+      # WebUI agent — named volume (Docker-managed)
+      - hermes-webui-8qvh_hermes-home:/data/webui:ro
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=my-agent-dashboard_default"
@@ -19,3 +19,7 @@ services:
       - "traefik.http.routers.my-agent-dashboard.rule=Host(`my-agent-dashboard.srv1694637.hstgr.cloud`)"
       - "traefik.http.routers.my-agent-dashboard.tls.certresolver=letsencrypt"
       - "traefik.http.services.my-agent-dashboard.loadbalancer.server.port=5173"
+
+volumes:
+  hermes-webui-8qvh_hermes-home:
+    external: true
