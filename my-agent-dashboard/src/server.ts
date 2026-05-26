@@ -4,11 +4,14 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { config } from './config.js';
 import { getStateMeta, getRecentMessages, getSessions, closeAllDbs } from './memory.js';
+import { saveTaskReport, getTaskReports, closeTasksDb } from './tasks.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const frontendDir = path.resolve(__dirname, '..', 'frontend');
 
 const app = express();
+
+app.use(express.json({ limit: '1mb' }));
 
 // Serve frontend static files publicly (no auth required to load the page)
 app.use(express.static(frontendDir));
@@ -86,6 +89,37 @@ app.get('/api/:agentId/messages/:sessionId', (req, res) => {
   }
 });
 
+// Ingest tasks from GCP Cloud Function — uses same DASHBOARD_TOKEN auth
+app.post('/api/ingest/tasks', (req, res) => {
+  const body = req.body;
+  if (!body || typeof body !== 'object') {
+    return res.status(400).json({ error: 'Invalid payload' });
+  }
+  const date: string = body.date || new Date().toISOString().slice(0, 10);
+  const source: string | null = body.source_file ?? body.source ?? null;
+  const tasks = Array.isArray(body.tasks) ? body.tasks : [];
+  if (!tasks.length) {
+    return res.status(400).json({ error: 'No tasks in payload' });
+  }
+  try {
+    const id = saveTaskReport(date, source, tasks);
+    res.json({ ok: true, id });
+  } catch (error: any) {
+    console.error('Error saving task report:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Read task reports
+app.get('/api/tasks', (_, res) => {
+  try {
+    res.json({ reports: getTaskReports(30) });
+  } catch (error: any) {
+    console.error('Error reading task reports:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Fallback: serve index.html for any non-API route (SPA catch-all)
 app.get('/{*splat}', (_, res) => res.sendFile(path.join(frontendDir, 'index.html')));
 
@@ -98,6 +132,7 @@ const server = app.listen(config.port, '0.0.0.0', () => {
 const shutdown = (signal: string) => {
   console.log(`${signal} signal received: closing HTTP server`);
   closeAllDbs();
+  closeTasksDb();
   server.close(() => {
     console.log('HTTP server closed');
     process.exit(0);

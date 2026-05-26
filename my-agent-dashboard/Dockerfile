@@ -11,8 +11,8 @@ COPY src/ ./src/
 COPY frontend/ ./frontend/
 COPY tsconfig.json ./
 
-# Create data directory (volume will be mounted here)
-RUN mkdir -p /data
+# Create data directory (volume will be mounted here) and local tasks DB dir
+RUN mkdir -p /data && mkdir -p /app/data
 
 EXPOSE 5173
 

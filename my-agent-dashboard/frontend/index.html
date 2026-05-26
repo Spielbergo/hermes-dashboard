@@ -271,6 +271,44 @@
     }
 
     .refresh-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* Tasks */
+    .task-day { margin-bottom: 0.5rem; }
+    .task-day-header {
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 0.5rem;
+      padding-bottom: 0.35rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .task-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.6rem;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.87rem;
+    }
+    .task-item:last-child { border-bottom: none; }
+    .task-priority {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      padding: 0.15rem 0.45rem;
+      border-radius: 4px;
+      white-space: nowrap;
+      margin-top: 0.1rem;
+      text-transform: uppercase;
+    }
+    .task-priority.high   { background: #7f1d1d; color: #fca5a5; }
+    .task-priority.medium { background: #78350f; color: #fcd34d; }
+    .task-priority.low    { background: #14532d; color: #86efac; }
+    .task-body { flex: 1; min-width: 0; }
+    .task-title { font-weight: 500; }
+    .task-context { font-size: 0.8rem; color: var(--text-dim); margin-top: 0.15rem; }
   </style>
 </head>
 <body>
@@ -306,6 +344,7 @@
     <button class="tab active" data-tab="memory">State</button>
     <button class="tab" data-tab="sessions">Sessions</button>
     <button class="tab" data-tab="messages">Messages</button>
+    <button class="tab" data-tab="tasks">Tasks</button>
   </div>
 
   <main>
@@ -348,6 +387,15 @@
         <div class="message-list" id="message-list">
           <span class="state-msg">Select a session above or enter a Session ID.</span>
         </div>
+      </div>
+    </div>
+    <!-- Tasks panel -->
+    <div class="panel" id="panel-tasks">
+      <div class="card">
+        <div class="card-title">Daily Task Lists
+          <button class="refresh-btn" data-refresh="tasks">↻ Refresh</button>
+        </div>
+        <div id="tasks-list"><span class="state-msg">Loading…</span></div>
       </div>
     </div>
   </main>
@@ -439,6 +487,7 @@
     sel.style.display = agents.length > 1 ? 'inline-block' : 'none';
     loadMemory();
     loadSessions();
+    loadTasks();
   }
 
   document.getElementById('agent-select').addEventListener('change', function() {
@@ -449,6 +498,7 @@
     document.getElementById('chat-id-input').value = '';
     loadMemory();
     loadSessions();
+    // Tasks are not agent-scoped, no reload needed
   });
 
   // ── Tabs ──
@@ -543,6 +593,48 @@
   });
 
   // ── Summary removed — replaced by Sessions ──
+
+  // ── Tasks ──
+  async function loadTasks() {
+    const list = document.getElementById('tasks-list');
+    list.innerHTML = '<span class="state-msg">Loading…</span>';
+    try {
+      const data = await api('/api/tasks');
+      if (!data.reports.length) {
+        list.innerHTML = '<span class="state-msg">No task reports yet. They will appear here after a call transcript is processed.</span>';
+        return;
+      }
+      list.innerHTML = '';
+      data.reports.forEach(report => {
+        const day = document.createElement('div');
+        day.className = 'task-day card';
+        day.style.marginBottom = '0.75rem';
+        const source = report.source ? ` <span style="font-weight:400;opacity:0.6">— ${escapeHtml(report.source)}</span>` : '';
+        day.innerHTML = `<div class="task-day-header">📋 ${escapeHtml(report.date)}${source}</div>`;
+        (report.tasks || []).forEach(task => {
+          const pri = (task.priority || 'medium').toLowerCase();
+          const contextParts = [];
+          if (task.context) contextParts.push(escapeHtml(task.context));
+          if (task.assigned_to) contextParts.push(`Assigned: ${escapeHtml(task.assigned_to)}`);
+          if (task.due) contextParts.push(`Due: ${escapeHtml(task.due)}`);
+          const item = document.createElement('div');
+          item.className = 'task-item';
+          item.innerHTML = `
+            <span class="task-priority ${pri}">${pri}</span>
+            <div class="task-body">
+              <div class="task-title">${escapeHtml(task.title || '')}</div>
+              ${contextParts.length ? `<div class="task-context">${contextParts.join(' · ')}</div>` : ''}
+            </div>`;
+          day.appendChild(item);
+        });
+        list.appendChild(day);
+      });
+    } catch (e) {
+      list.innerHTML = `<span class="state-msg" style="color:var(--error)">Error: ${e.message}</span>`;
+    }
+  }
+
+  document.querySelector('[data-refresh="tasks"]').addEventListener('click', loadTasks);
 
   // ── XSS helper ──
   function escapeHtml(str) {
