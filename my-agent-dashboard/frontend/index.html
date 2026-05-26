@@ -284,31 +284,35 @@
       padding-bottom: 0.35rem;
       border-bottom: 1px solid var(--border);
     }
-    .task-item {
-      display: flex;
-      align-items: flex-start;
-      gap: 0.6rem;
-      padding: 0.5rem 0;
-      border-bottom: 1px solid var(--border);
+    .task-analysis {
       font-size: 0.87rem;
+      line-height: 1.6;
+      color: var(--text);
+      white-space: pre-wrap;
+      word-break: break-word;
     }
-    .task-item:last-child { border-bottom: none; }
-    .task-priority {
-      font-size: 0.7rem;
-      font-weight: 700;
-      letter-spacing: 0.04em;
-      padding: 0.15rem 0.45rem;
-      border-radius: 4px;
-      white-space: nowrap;
-      margin-top: 0.1rem;
-      text-transform: uppercase;
+    .task-analysis h4 {
+      font-size: 0.9rem;
+      color: var(--accent);
+      margin: 0.75rem 0 0.3rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0.2rem;
     }
-    .task-priority.high   { background: #7f1d1d; color: #fca5a5; }
-    .task-priority.medium { background: #78350f; color: #fcd34d; }
-    .task-priority.low    { background: #14532d; color: #86efac; }
-    .task-body { flex: 1; min-width: 0; }
-    .task-title { font-weight: 500; }
-    .task-context { font-size: 0.8rem; color: var(--text-dim); margin-top: 0.15rem; }
+    .task-analysis h3 {
+      font-size: 1rem;
+      color: var(--accent);
+      margin: 0.75rem 0 0.3rem;
+    }
+    .task-source-badge {
+      font-size: 0.65rem;
+      font-weight: 600;
+      padding: 0.1rem 0.4rem;
+      border-radius: 3px;
+      background: var(--border);
+      color: var(--text-dim);
+      vertical-align: middle;
+      float: right;
+    }
   </style>
 </head>
 <body>
@@ -498,7 +502,7 @@
     document.getElementById('chat-id-input').value = '';
     loadMemory();
     loadSessions();
-    // Tasks are not agent-scoped, no reload needed
+    loadTasks();
   });
 
   // ── Tabs ──
@@ -595,39 +599,48 @@
   // ── Summary removed — replaced by Sessions ──
 
   // ── Tasks ──
+  function renderMarkdown(text) {
+    if (!text) return '<em style="opacity:0.5">No analysis yet.</em>';
+    // Escape HTML first, then apply safe markdown transforms
+    return text
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/^#### (.+)$/gm, '<h4>$1</h4>')
+      .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\n/g, '<br>');
+  }
+
+  function formatTimestamp(val) {
+    if (!val) return '—';
+    const d = typeof val === 'number' ? new Date(val * 1000) : new Date(val);
+    return isNaN(d.getTime()) ? String(val) : d.toLocaleString();
+  }
+
   async function loadTasks() {
     const list = document.getElementById('tasks-list');
     list.innerHTML = '<span class="state-msg">Loading…</span>';
     try {
-      const data = await api('/api/tasks');
-      if (!data.reports.length) {
-        list.innerHTML = '<span class="state-msg">No task reports yet. They will appear here after a call transcript is processed.</span>';
+      const data = await api(`/api/${currentAgent}/webhook-sessions`);
+      if (!data.sessions || !data.sessions.length) {
+        list.innerHTML = '<span class="state-msg">No webhook sessions yet. They will appear here after a call transcript is processed via Hermes.</span>';
         return;
       }
       list.innerHTML = '';
-      data.reports.forEach(report => {
-        const day = document.createElement('div');
-        day.className = 'task-day card';
-        day.style.marginBottom = '0.75rem';
-        const source = report.source ? ` <span style="font-weight:400;opacity:0.6">— ${escapeHtml(report.source)}</span>` : '';
-        day.innerHTML = `<div class="task-day-header">📋 ${escapeHtml(report.date)}${source}</div>`;
-        (report.tasks || []).forEach(task => {
-          const pri = (task.priority || 'medium').toLowerCase();
-          const contextParts = [];
-          if (task.context) contextParts.push(escapeHtml(task.context));
-          if (task.assigned_to) contextParts.push(`Assigned: ${escapeHtml(task.assigned_to)}`);
-          if (task.due) contextParts.push(`Due: ${escapeHtml(task.due)}`);
-          const item = document.createElement('div');
-          item.className = 'task-item';
-          item.innerHTML = `
-            <span class="task-priority ${pri}">${pri}</span>
-            <div class="task-body">
-              <div class="task-title">${escapeHtml(task.title || '')}</div>
-              ${contextParts.length ? `<div class="task-context">${contextParts.join(' · ')}</div>` : ''}
-            </div>`;
-          day.appendChild(item);
-        });
-        list.appendChild(day);
+      data.sessions.forEach(session => {
+        const card = document.createElement('div');
+        card.className = 'task-day card';
+        card.style.marginBottom = '0.75rem';
+        const dateStr = formatTimestamp(session.started_at);
+        const title = session.title || 'Untitled Session';
+        const sourceBadge = session.source ? `<span class="task-source-badge">${escapeHtml(session.source)}</span>` : '';
+        card.innerHTML = `
+          <div class="task-day-header">
+            📋 ${escapeHtml(dateStr)}
+            <span style="font-weight:400;opacity:0.6">— ${escapeHtml(title)}</span>
+            ${sourceBadge}
+          </div>
+          <div class="task-analysis">${renderMarkdown(session.analysis)}</div>`;
+        list.appendChild(card);
       });
     } catch (e) {
       list.innerHTML = `<span class="state-msg" style="color:var(--error)">Error: ${e.message}</span>`;

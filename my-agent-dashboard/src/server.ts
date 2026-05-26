@@ -3,7 +3,7 @@ import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { config } from './config.js';
-import { getStateMeta, getRecentMessages, getSessions, closeAllDbs } from './memory.js';
+import { getStateMeta, getRecentMessages, getSessions, getWebhookSessions, closeAllDbs } from './memory.js';
 import { saveTaskReport, getTaskReports, closeTasksDb } from './tasks.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -86,6 +86,18 @@ app.get('/api/:agentId/messages/:sessionId', (req, res) => {
   } catch (error: any) {
     console.error('Error fetching messages:', error);
     res.status(500).json({ error: `Failed to fetch messages: ${error.message}` });
+  }
+});
+
+// Webhook sessions for a specific agent (source LIKE '%webhook%')
+app.get('/api/:agentId/webhook-sessions', (req, res) => {
+  const agent = resolveAgent(req.params.agentId);
+  if (!agent) return res.status(404).json({ error: 'Agent not found' });
+  try {
+    res.json({ sessions: getWebhookSessions(agent.dbPath, 30) });
+  } catch (error: any) {
+    console.error('Error fetching webhook sessions:', error);
+    res.status(500).json({ error: `Failed to fetch webhook sessions: ${error.message}` });
   }
 });
 

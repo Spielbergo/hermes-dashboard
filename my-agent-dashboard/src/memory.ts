@@ -42,6 +42,25 @@ export function getSessions(dbPath: string, limit = 50) {
   return rows;
 }
 
+// Webhook sessions — sessions created by the gateway webhook platform
+export function getWebhookSessions(dbPath: string, limit = 30) {
+  const db = getDb(dbPath);
+  try {
+    const rows = db.prepare(
+      `SELECT s.id, s.title, s.source, s.started_at,
+              (SELECT content FROM messages
+               WHERE session_id = s.id AND role = 'assistant'
+               ORDER BY timestamp DESC LIMIT 1) as analysis
+       FROM sessions s
+       WHERE s.source LIKE '%webhook%'
+       ORDER BY s.started_at DESC LIMIT ?`
+    ).all(limit) as any[];
+    return rows;
+  } catch {
+    return [];
+  }
+}
+
 export function closeAllDbs() {
   for (const db of dbCache.values()) db.close();
   dbCache.clear();
