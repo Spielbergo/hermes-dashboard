@@ -1,9 +1,13 @@
 import Database from 'better-sqlite3';
+import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const DB_PATH = path.resolve(__dirname, '..', 'data', 'tasks.db');
+const DB_PATH = process.env.TASKS_DB_PATH ?? path.resolve(__dirname, '..', 'data', 'tasks.db');
+
+// Ensure the directory exists (works in both Docker /data and local ./data)
+fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
 
 let db: Database.Database | null = null;
 
