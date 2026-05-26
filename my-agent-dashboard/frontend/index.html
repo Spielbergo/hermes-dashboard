@@ -136,6 +136,18 @@
 
     .logout-btn:hover { border-color: var(--text-dim); color: var(--text); }
 
+    .agent-select {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-size: 0.85rem;
+      padding: 0.3rem 0.6rem;
+      cursor: pointer;
+      outline: none;
+    }
+    .agent-select:focus { border-color: var(--accent); }
+
     /* ── Tabs ── */
     .tabs {
       background: var(--surface);
@@ -284,6 +296,7 @@
   <header>
     <h1>⚡ Hermes Dashboard</h1>
     <div class="header-right">
+      <select class="agent-select" id="agent-select" style="display:none"></select>
       <span><span class="status-dot"></span> Connected</span>
       <button class="logout-btn" id="logout-btn">Sign out</button>
     </div>
@@ -343,14 +356,17 @@
 <script>
   // ── State ──
   let token = '';
+  let currentAgent = '';
 
   // ── Persist session ──
   function saveSession() {
     sessionStorage.setItem('hermes_token', token);
+    sessionStorage.setItem('hermes_agent', currentAgent);
   }
 
   function clearSession() {
     sessionStorage.removeItem('hermes_token');
+    sessionStorage.removeItem('hermes_agent');
   }
 
   // ── API helper — uses relative paths, same origin as the page ──
@@ -375,11 +391,11 @@
     token = document.getElementById('token-input').value.trim();
 
     try {
-      await api('/api/memory');
+      const { agents } = await api('/api/agents');
+      if (!agents.length) throw new Error('No agents configured');
       saveSession();
       showApp();
-      loadMemory();
-      loadSessions();
+      populateAgentSelect(agents);
     } catch {
       loginError.style.display = 'block';
     } finally {
@@ -404,6 +420,37 @@
     appEl.style.display = 'flex';
   }
 
+  // ── Agent selector ──
+  function populateAgentSelect(agents) {
+    const sel = document.getElementById('agent-select');
+    sel.innerHTML = '';
+    agents.forEach(a => {
+      const opt = document.createElement('option');
+      opt.value = a.id;
+      opt.textContent = a.name;
+      sel.appendChild(opt);
+    });
+    // Restore previously selected agent if still valid
+    const saved = sessionStorage.getItem('hermes_agent');
+    if (saved && agents.find(a => a.id === saved)) {
+      sel.value = saved;
+    }
+    currentAgent = sel.value;
+    sel.style.display = agents.length > 1 ? 'inline-block' : 'none';
+    loadMemory();
+    loadSessions();
+  }
+
+  document.getElementById('agent-select').addEventListener('change', function() {
+    currentAgent = this.value;
+    sessionStorage.setItem('hermes_agent', currentAgent);
+    // Clear messages panel when switching agents
+    document.getElementById('message-list').innerHTML = '<span class="state-msg">Select a session above or enter a Session ID.</span>';
+    document.getElementById('chat-id-input').value = '';
+    loadMemory();
+    loadSessions();
+  });
+
   // ── Tabs ──
   document.querySelectorAll('.tab').forEach(tab => {
     tab.addEventListener('click', () => {
@@ -419,7 +466,7 @@
     const el = document.getElementById('memory-content');
     el.innerHTML = '<span class="state-msg">Loading…</span>';
     try {
-      const data = await api('/api/memory');
+      const data = await api(`/api/${currentAgent}/memory`);
       el.textContent = data.memory || '(no facts stored yet)';
     } catch (e) {
       el.innerHTML = `<span class="state-msg" style="color:var(--error)">Error: ${e.message}</span>`;
@@ -433,7 +480,7 @@
     const list = document.getElementById('sessions-list');
     list.innerHTML = '<span class="state-msg">Loading…</span>';
     try {
-      const data = await api('/api/sessions');
+      const data = await api(`/api/${currentAgent}/sessions`);
       if (!data.sessions.length) {
         list.innerHTML = '<span class="state-msg">No sessions found.</span>';
         return;
@@ -477,7 +524,7 @@
     const list = document.getElementById('message-list');
     list.innerHTML = '<span class="state-msg">Loading…</span>';
     try {
-      const data = await api(`/api/recent-messages/${encodeURIComponent(chatId)}`);
+      const data = await api(`/api/${currentAgent}/messages/${encodeURIComponent(chatId)}`);
       if (!data.messages.length) {
         list.innerHTML = '<span class="state-msg">No messages found for this Chat ID.</span>';
         return;
@@ -510,8 +557,12 @@
   const savedToken = sessionStorage.getItem('hermes_token');
   if (savedToken) {
     token = savedToken;
-    api('/api/memory')
-      .then(() => { showApp(); loadMemory(); loadSessions(); })
+    api('/api/agents')
+      .then(({ agents }) => {
+        if (!agents.length) throw new Error('No agents');
+        showApp();
+        populateAgentSelect(agents);
+      })
       .catch(() => { clearSession(); });
   }
 </script>

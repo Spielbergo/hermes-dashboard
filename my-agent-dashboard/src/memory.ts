@@ -1,28 +1,29 @@
 import Database from 'better-sqlite3';
-import { config } from './config.js';
 
-let db: Database.Database | null = null;
+// Per-path DB cache — opens each database once, read-only
+const dbCache = new Map<string, Database.Database>();
 
-function getDb() {
-  if (!db) {
-    db = new Database(config.dbPath, { readonly: true });
+function getDb(dbPath: string): Database.Database {
+  if (!dbCache.has(dbPath)) {
+    const db = new Database(dbPath, { readonly: true });
     db.pragma('journal_mode = WAL');
+    dbCache.set(dbPath, db);
   }
-  return db;
+  return dbCache.get(dbPath)!;
 }
 
 // State meta — key/value store
-export function getStateMeta(): string {
-  const dbInstance = getDb();
-  const rows = dbInstance.prepare('SELECT key, value FROM state_meta ORDER BY key').all() as any[];
+export function getStateMeta(dbPath: string): string {
+  const db = getDb(dbPath);
+  const rows = db.prepare('SELECT key, value FROM state_meta ORDER BY key').all() as any[];
   if (!rows.length) return '(no state data stored yet)';
   return rows.map(r => `• ${r.key}: ${r.value}`).join('\n');
 }
 
 // Recent messages for a session
-export function getRecentMessages(sessionId: string, limit = 100) {
-  const dbInstance = getDb();
-  const rows = dbInstance.prepare(
+export function getRecentMessages(dbPath: string, sessionId: string, limit = 100) {
+  const db = getDb(dbPath);
+  const rows = db.prepare(
     `SELECT role, content, tool_name, timestamp
      FROM messages
      WHERE session_id = ? ORDER BY timestamp DESC LIMIT ?`
@@ -31,9 +32,9 @@ export function getRecentMessages(sessionId: string, limit = 100) {
 }
 
 // Sessions list (most recent first)
-export function getSessions(limit = 50) {
-  const dbInstance = getDb();
-  const rows = dbInstance.prepare(
+export function getSessions(dbPath: string, limit = 50) {
+  const db = getDb(dbPath);
+  const rows = db.prepare(
     `SELECT id, title, source, model, started_at, ended_at,
             message_count, input_tokens, output_tokens, estimated_cost_usd
      FROM sessions ORDER BY started_at DESC LIMIT ?`
@@ -41,9 +42,7 @@ export function getSessions(limit = 50) {
   return rows;
 }
 
-export function closeDb() {
-  if (db) {
-    db.close();
-    db = null;
-  }
+export function closeAllDbs() {
+  for (const db of dbCache.values()) db.close();
+  dbCache.clear();
 }

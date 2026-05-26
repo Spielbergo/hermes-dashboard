@@ -4,38 +4,38 @@ import path from 'path';
 // Load environment variables from .env file
 dotenv.config({ path: path.resolve(process.cwd(), '.env') });
 
-// Helper to get absolute path relative to the project root
-const resolvePath = (p: string) => path.resolve(process.cwd(), p);
+export interface AgentConfig {
+  id: string;
+  name: string;
+  dbPath: string;
+}
+
+/**
+ * Parse AGENTS env var. Format: semicolon-separated entries of "id:Display Name:/path/to/state.db"
+ * Example: AGENTS=cli:Hermes CLI:/data/cli/state.db;webui:Hermes WebUI:/data/webui/state.db
+ * Falls back to DB_PATH for single-agent setups.
+ */
+function parseAgents(): AgentConfig[] {
+  const raw = process.env.AGENTS || '';
+  if (raw) {
+    const agents = raw.split(';').flatMap(entry => {
+      const parts = entry.trim().split(':');
+      if (parts.length < 3) return [];
+      const id = parts[0].trim();
+      const name = parts[1].trim();
+      const dbPath = parts.slice(2).join(':').trim(); // rejoin — paths can contain colons
+      return id && name && dbPath ? [{ id, name, dbPath }] : [];
+    });
+    if (agents.length) return agents;
+  }
+  // Backward compat: single DB_PATH
+  const dbPath = process.env.DB_PATH || '/data/state.db';
+  return [{ id: 'default', name: 'Hermes', dbPath }];
+}
 
 export const config = {
-  llm: {
-    provider: process.env.LLM_PROVIDER || 'gemini',
-    model: process.env.LLM_MODEL || 'gemini-2.5-flash-lite',
-  },
-  telegram: {
-    token: process.env.TELEGRAM_BOT_TOKEN || '',
-    allowedUserIds: (process.env.ALLOWED_USER_IDS || '')
-      .split(',')
-      .map(s => s.trim())
-      .filter(Boolean)
-      .map(Number),
-  },
-  user: {
-    name: process.env.USER_NAME || 'friend',
-    timezone: process.env.USER_TIMEZONE || 'UTC',
-  },
-  dbPath: process.env.DB_PATH || resolvePath('../hermes-agent/data/memory.db'),
-  pineconeKey: process.env.PINECONE_API_KEY,
-  pineconeIndex: process.env.PINECONE_INDEX ?? 'my-agent',
-  supabaseUrl: process.env.SUPABASE_URL,
-  supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
+  agents: parseAgents(),
   dashboardToken: process.env.DASHBOARD_TOKEN!,
   port: parseInt(process.env.PORT || '5173', 10),
-  // Only set in dev or if frontend is on a different origin. Leave unset on VPS (same-origin via nginx).
   corsOrigin: process.env.CORS_ORIGIN || '',
 };
-
-// Ensure the DB path is correctly resolved if it's relative to the dashboard's root
-if (!path.isAbsolute(config.dbPath)) {
-  config.dbPath = path.resolve(process.cwd(), config.dbPath);
-}
