@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -7,36 +7,27 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --bg: #0f1117;
-      --surface: #1a1d27;
-      --surface2: #22263a;
-      --border: #2a2d3d;
-      --accent: #7c6af7;
-      --accent-dim: #4e46a0;
-      --text: #e2e4f0;
-      --text-dim: #8b8fa8;
-      --text-muted: #4e526a;
-      --error: #f87171;
-      --success: #4ade80;
-      --high: #f87171;
-      --med: #fbbf24;
-      --low: #60a5fa;
+      --bg: #0f1117; --surface: #1a1d27; --surface2: #22263a; --border: #2a2d3d;
+      --accent: #7c6af7; --accent-dim: #4e46a0;
+      --text: #e2e4f0; --text-dim: #8b8fa8; --text-muted: #4e526a;
+      --error: #f87171; --success: #4ade80;
+      --high: #f87171; --med: #fbbf24; --low: #60a5fa;
       --sidebar-w: 220px;
     }
     body { background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, -apple-system, sans-serif; min-height: 100vh; font-size: 14px; line-height: 1.5; }
 
-    /* â”€â”€ Login â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    /* Login */
     #login-screen { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
     .login-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 2.5rem 2rem; width: 100%; max-width: 380px; display: flex; flex-direction: column; gap: 1.25rem; }
     .login-card h1 { font-size: 1.4rem; font-weight: 700; }
-    .login-card p { color: var(--text-dim); font-size: 0.875rem; }
+    .login-logo { font-size: 2rem; font-weight: 900; color: var(--accent); letter-spacing: -1px; }
     .field { display: flex; flex-direction: column; gap: 0.4rem; }
     .field label { font-size: 0.75rem; color: var(--text-dim); font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
     .field input { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 0.9rem; padding: 0.65rem 0.85rem; outline: none; transition: border-color 0.15s; width: 100%; }
     .field input:focus { border-color: var(--accent); }
     .error-msg { color: var(--error); font-size: 0.85rem; display: none; }
 
-    /* â”€â”€ Buttons â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    /* Buttons */
     .btn { background: var(--accent); border: none; border-radius: 8px; color: #fff; cursor: pointer; font-size: 0.875rem; font-weight: 600; padding: 0.65rem 1rem; transition: background 0.15s, opacity 0.15s; }
     .btn:hover { background: var(--accent-dim); }
     .btn:disabled { opacity: 0.4; cursor: not-allowed; }
@@ -48,20 +39,21 @@
     .btn.success-btn { background: rgba(74,222,128,0.15); color: var(--success); border: 1px solid rgba(74,222,128,0.3); }
     .btn.success-btn:hover { background: rgba(74,222,128,0.25); }
 
-    /* â”€â”€ App Layout â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    /* App */
     #app { display: none; }
 
-    /* â”€â”€ Sidebar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    /* Sidebar */
     .sidebar { position: fixed; left: 0; top: 0; width: var(--sidebar-w); height: 100vh; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 100; overflow-y: auto; }
-    .sidebar-header { padding: 1.25rem 1rem; border-bottom: 1px solid var(--border); }
-    .sidebar-logo { display: flex; align-items: center; gap: 0.6rem; font-size: 1.05rem; font-weight: 700; color: var(--text); }
-    .sidebar-logo .logo-icon { font-size: 1.4rem; }
+    .sidebar-header { padding: 1.2rem 1rem; border-bottom: 1px solid var(--border); }
+    .sidebar-logo { font-size: 1.05rem; font-weight: 800; color: var(--accent); letter-spacing: -0.5px; }
+    .sidebar-logo span { color: var(--text-dim); font-weight: 400; font-size: 0.8rem; display: block; margin-top: 0.1rem; }
     .sidebar-nav { flex: 1; padding: 0.5rem 0; }
     .nav-section { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); padding: 0.75rem 1rem 0.3rem; }
-    .nav-item { display: flex; align-items: center; gap: 0.65rem; padding: 0.6rem 1rem; color: var(--text-dim); cursor: pointer; border: none; background: none; width: 100%; text-align: left; font-size: 0.875rem; font-weight: 500; transition: background 0.1s, color 0.1s; position: relative; }
+    .nav-item { display: flex; align-items: center; gap: 0.6rem; padding: 0.6rem 1rem; color: var(--text-dim); cursor: pointer; border: none; background: none; width: 100%; text-align: left; font-size: 0.875rem; font-weight: 500; transition: background 0.1s, color 0.1s; }
     .nav-item:hover { background: var(--surface2); color: var(--text); }
     .nav-item.active { background: rgba(124,106,247,0.12); color: var(--accent); }
-    .nav-item .nav-icon { font-size: 1rem; width: 20px; text-align: center; flex-shrink: 0; }
+    .nav-icon { width: 18px; height: 18px; flex-shrink: 0; opacity: 0.7; }
+    .nav-item.active .nav-icon { opacity: 1; }
     .nav-badge { margin-left: auto; background: var(--accent); color: #fff; font-size: 0.65rem; font-weight: 700; border-radius: 999px; padding: 0.1rem 0.45rem; min-width: 18px; text-align: center; }
     .sidebar-footer { padding: 0.75rem; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 0.5rem; }
     .agent-select { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 0.8rem; padding: 0.5rem 0.65rem; cursor: pointer; outline: none; width: 100%; transition: border-color 0.15s; }
@@ -69,7 +61,7 @@
     .logout-btn { background: none; border: 1px solid var(--border); border-radius: 8px; color: var(--text-dim); cursor: pointer; font-size: 0.8rem; padding: 0.5rem; width: 100%; text-align: center; transition: border-color 0.15s, color 0.15s; }
     .logout-btn:hover { border-color: var(--error); color: var(--error); }
 
-    /* â”€â”€ Main Content â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    /* Main */
     .main-content { margin-left: var(--sidebar-w); min-height: 100vh; display: flex; flex-direction: column; }
     .page-header { padding: 1.5rem 2rem 0; display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-shrink: 0; }
     .page-header h2 { font-size: 1.2rem; font-weight: 700; }
@@ -78,14 +70,14 @@
     .panel.active { display: flex; }
     .panel-body { padding: 1.25rem 2rem 2rem; flex: 1; display: flex; flex-direction: column; gap: 1rem; overflow-y: auto; }
 
-    /* â”€â”€ Cards â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    /* Cards */
     .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem 1.5rem; }
     .card-title { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between; }
 
-    /* â”€â”€ Dashboard â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    /* Dashboard */
     .stats-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 0.875rem; }
     .stats-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.1rem 1.25rem; display: flex; align-items: center; gap: 0.85rem; }
-    .stats-icon { font-size: 1.4rem; width: 42px; height: 42px; background: var(--bg); border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .stats-icon { font-size: 1.25rem; width: 40px; height: 40px; background: var(--bg); border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
     .stats-num { font-size: 1.4rem; font-weight: 700; }
     .stats-lbl { font-size: 0.72rem; color: var(--text-dim); margin-top: 0.1rem; }
     .agent-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 0.875rem; }
@@ -101,60 +93,66 @@
     .agent-last { margin-top: 0.85rem; font-size: 0.75rem; color: var(--text-dim); }
     .section-label { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.75rem; }
 
-    /* â”€â”€ Tasks â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    /* Task toolbar */
     .tasks-toolbar { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 0.65rem 1rem; display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
     .filter-tabs { display: flex; gap: 0.25rem; }
     .filter-tab { background: none; border: 1px solid var(--border); border-radius: 6px; color: var(--text-dim); cursor: pointer; font-size: 0.78rem; font-weight: 500; padding: 0.3rem 0.65rem; transition: all 0.1s; }
     .filter-tab:hover { border-color: var(--accent-dim); color: var(--text); }
     .filter-tab.active { background: var(--accent); border-color: var(--accent); color: #fff; }
     .toolbar-right { display: flex; align-items: center; gap: 0.5rem; margin-left: auto; }
-    .select-all-label { display: flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; color: var(--text-dim); cursor: pointer; }
+    .select-all-label { display: flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; color: var(--text-dim); cursor: pointer; user-select: none; }
     .selection-toolbar { display: none; align-items: center; gap: 0.5rem; background: rgba(124,106,247,0.07); border: 1px solid rgba(124,106,247,0.25); border-radius: 10px; padding: 0.6rem 1rem; flex-wrap: wrap; }
     .selection-toolbar.visible { display: flex; }
     .selection-count { font-size: 0.85rem; color: var(--accent); font-weight: 600; }
-    .task-date-group { margin-bottom: 0.25rem; }
-    .task-date-header { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); padding: 0.75rem 0.25rem 0.4rem; border-bottom: 1px solid var(--border); margin-bottom: 0.35rem; display: flex; align-items: center; justify-content: space-between; }
-    .day-count { font-size: 0.68rem; font-weight: 500; background: var(--border); color: var(--text-dim); border-radius: 999px; padding: 0.1rem 0.45rem; }
-    .task-item { display: flex; align-items: flex-start; gap: 0.6rem; padding: 0.6rem 0.65rem; border-radius: 8px; border: 1px solid transparent; transition: background 0.1s, border-color 0.1s; margin-bottom: 0.2rem; }
-    .task-item:hover { background: var(--surface); border-color: var(--border); }
-    .task-item.selected { background: rgba(124,106,247,0.06); border-color: rgba(124,106,247,0.2); }
-    .task-item.done .task-title { text-decoration: line-through; opacity: 0.4; }
-    .task-item.done .task-context { opacity: 0.3; }
-    .task-item.dragging { opacity: 0.35; background: var(--surface2); }
-    .task-item.drag-over { border-color: var(--accent); border-style: dashed; }
-    .drag-handle { color: var(--text-muted); cursor: grab; font-size: 0.9rem; padding: 0.1rem 0; flex-shrink: 0; opacity: 0.3; transition: opacity 0.1s; user-select: none; margin-top: 2px; }
-    .task-item:hover .drag-handle { opacity: 0.8; }
-    .drag-handle:active { cursor: grabbing; }
-    .task-cb { width: 17px; height: 17px; border: 2px solid var(--border); border-radius: 4px; flex-shrink: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; margin-top: 1px; transition: all 0.12s; background: transparent; font-size: 0.7rem; font-weight: 700; }
-    .task-cb:hover { border-color: var(--success); }
-    .task-cb.done-cb { background: var(--success); border-color: var(--success); color: #fff; }
-    .task-cb.sel-cb { border-color: var(--accent-dim); }
-    .task-cb.sel-cb.sel-checked { background: var(--accent); border-color: var(--accent); color: #fff; }
-    .task-main { flex: 1; min-width: 0; }
-    .task-title-row { display: flex; align-items: baseline; gap: 0.45rem; flex-wrap: wrap; }
-    .task-title { font-size: 0.875rem; font-weight: 500; color: var(--text); line-height: 1.4; }
-    .task-context { font-size: 0.775rem; color: var(--text-dim); margin-top: 0.2rem; line-height: 1.45; }
-    .priority-badge { font-size: 0.62rem; font-weight: 700; padding: 0.12rem 0.38rem; border-radius: 4px; letter-spacing: 0.04em; text-transform: uppercase; flex-shrink: 0; }
-    .priority-badge.high, .priority-badge.High { background: rgba(248,113,113,0.12); color: var(--high); }
-    .priority-badge.med, .priority-badge.Med, .priority-badge.medium, .priority-badge.Medium { background: rgba(251,191,36,0.12); color: var(--med); }
-    .priority-badge.low, .priority-badge.Low { background: rgba(96,165,250,0.12); color: var(--low); }
-    .source-badge { font-size: 0.62rem; padding: 0.1rem 0.35rem; border-radius: 3px; background: var(--border); color: var(--text-muted); flex-shrink: 0; }
-    .task-actions { display: flex; gap: 0.2rem; opacity: 0; transition: opacity 0.1s; flex-shrink: 0; }
-    .task-item:hover .task-actions { opacity: 1; }
-    .task-act-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.8rem; padding: 0.2rem 0.3rem; border-radius: 4px; line-height: 1; transition: background 0.1s, color 0.1s; }
+
+    /* Task table */
+    .task-table-wrap { overflow-x: auto; }
+    .task-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    .task-table thead { position: sticky; top: 0; z-index: 2; }
+    .task-table th { background: var(--surface2); border-bottom: 1px solid var(--border); color: var(--text-dim); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.05em; padding: 0.6rem 0.75rem; text-align: left; text-transform: uppercase; white-space: nowrap; }
+    .task-table th.sortable { cursor: pointer; user-select: none; }
+    .task-table th.sortable:hover { color: var(--text); }
+    .task-table th.sort-active { color: var(--accent); }
+    .sort-ind { display: inline-block; width: 14px; text-align: center; font-size: 0.7rem; opacity: 0.6; }
+    .task-table td { border-bottom: 1px solid rgba(42,45,61,0.5); padding: 0.6rem 0.75rem; vertical-align: middle; }
+    .task-table tr:last-child td { border-bottom: none; }
+    .task-table tr:hover td { background: rgba(124,106,247,0.04); }
+    .task-table tr.selected td { background: rgba(124,106,247,0.07); }
+    .task-table tr.done td { opacity: 0.45; }
+    .task-table tr.done .task-title-cell { text-decoration: line-through; }
+    .td-sel { width: 32px; }
+    .td-pri { width: 70px; }
+    .td-title { max-width: 280px; }
+    .td-ctx { max-width: 220px; color: var(--text-dim); font-size: 0.8rem; }
+    .td-file { width: 120px; }
+    .td-date { width: 100px; white-space: nowrap; }
+    .td-added { width: 100px; white-space: nowrap; }
+    .td-act { width: 36px; }
+    .task-title-cell { font-weight: 500; color: var(--text); word-break: break-word; }
+    .ctx-cell { color: var(--text-dim); word-break: break-word; font-size: 0.8rem; }
+    .file-cell { font-size: 0.75rem; color: var(--text-muted); }
+    .date-cell, .added-cell { font-size: 0.78rem; color: var(--text-dim); }
+
+    .priority-badge { font-size: 0.62rem; font-weight: 700; padding: 0.15rem 0.4rem; border-radius: 4px; letter-spacing: 0.04em; text-transform: uppercase; display: inline-block; }
+    .priority-badge.High, .priority-badge.high { background: rgba(248,113,113,0.12); color: var(--high); }
+    .priority-badge.Med, .priority-badge.med, .priority-badge.Medium { background: rgba(251,191,36,0.12); color: var(--med); }
+    .priority-badge.Low, .priority-badge.low { background: rgba(96,165,250,0.12); color: var(--low); }
+
+    .sel-cb { width: 15px; height: 15px; cursor: pointer; accent-color: var(--accent); }
+    .task-act-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.8rem; padding: 0.2rem 0.35rem; border-radius: 4px; line-height: 1; transition: background 0.1s, color 0.1s; }
     .task-act-btn:hover { background: var(--border); color: var(--text); }
     .task-act-btn.del:hover { background: rgba(248,113,113,0.12); color: var(--error); }
     .empty-state { text-align: center; padding: 3rem 1rem; color: var(--text-dim); }
-    .empty-icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+    .empty-icon { font-size: 2rem; margin-bottom: 0.75rem; }
 
-    /* â”€â”€ Sessions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    /* Sessions */
     .session-item { padding: 0.85rem 0; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 1rem; }
     .session-item:last-child { border-bottom: none; }
     .session-main { flex: 1; min-width: 0; }
     .session-title { font-size: 0.875rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .session-meta { font-size: 0.75rem; color: var(--text-dim); margin-top: 0.2rem; }
 
-    /* â”€â”€ Messages â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    /* Messages */
     .message-list { display: flex; flex-direction: column; gap: 0.5rem; }
     .message { border-radius: 8px; font-size: 0.85rem; line-height: 1.55; max-width: 85%; padding: 0.65rem 0.9rem; }
     .message.user { align-self: flex-end; background: var(--accent-dim); color: #fff; }
@@ -163,14 +161,16 @@
     .chat-input-row { display: flex; gap: 0.75rem; align-items: flex-end; }
     .chat-input-row .field { flex: 1; }
 
-    /* â”€â”€ State â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    /* State */
     .memory-content { font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 0.82rem; line-height: 1.75; white-space: pre-wrap; word-break: break-word; }
 
-    /* â”€â”€ Misc â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    /* Misc */
     .state-msg { color: var(--text-dim); font-size: 0.875rem; padding: 1rem 0; text-align: center; }
     .refresh-btn { background: none; border: 1px solid var(--border); border-radius: 6px; color: var(--text-dim); cursor: pointer; font-size: 0.78rem; padding: 0.3rem 0.65rem; transition: border-color 0.15s, color 0.15s; }
     .refresh-btn:hover { border-color: var(--accent); color: var(--accent); }
-    ::-webkit-scrollbar { width: 5px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
   </style>
 </head>
 <body>
@@ -179,13 +179,13 @@
 <div id="login-screen">
   <div class="login-card">
     <div>
-      <div style="font-size:2rem;margin-bottom:0.5rem">âš¡</div>
-      <h1>Hermes Dashboard</h1>
-      <p style="margin-top:0.4rem">Enter your dashboard token to continue.</p>
+      <div class="login-logo">Hermes</div>
+      <h1 style="margin-top:0.5rem">Dashboard</h1>
+      <p style="margin-top:0.4rem;color:var(--text-dim);font-size:0.875rem">Enter your dashboard token to continue.</p>
     </div>
     <div class="field">
       <label for="token-input">Dashboard Token</label>
-      <input id="token-input" type="password" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" autocomplete="current-password" />
+      <input id="token-input" type="password" placeholder="Enter token" autocomplete="current-password" />
     </div>
     <div class="error-msg" id="login-error">Invalid token or unreachable API.</div>
     <button class="btn" id="login-btn">Sign in</button>
@@ -196,16 +196,32 @@
 <div id="app">
   <aside class="sidebar">
     <div class="sidebar-header">
-      <div class="sidebar-logo"><span class="logo-icon">âš¡</span> Hermes</div>
+      <div class="sidebar-logo">Hermes <span>Dashboard</span></div>
     </div>
     <nav class="sidebar-nav">
       <div class="nav-section">Main</div>
-      <button class="nav-item active" data-panel="dashboard"><span class="nav-icon">ðŸ </span> Dashboard</button>
-      <button class="nav-item" data-panel="tasks"><span class="nav-icon">âœ…</span> Tasks <span class="nav-badge" id="tasks-badge" style="display:none">0</span></button>
+      <button class="nav-item active" data-panel="dashboard">
+        <svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h4a1 1 0 001-1v-3h2v3a1 1 0 001 1h4a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/></svg>
+        Dashboard
+      </button>
+      <button class="nav-item" data-panel="tasks">
+        <svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"/></svg>
+        Tasks
+        <span class="nav-badge" id="tasks-badge" style="display:none">0</span>
+      </button>
       <div class="nav-section" style="margin-top:0.5rem">Agent</div>
-      <button class="nav-item" data-panel="sessions"><span class="nav-icon">ðŸ’¬</span> Sessions</button>
-      <button class="nav-item" data-panel="state"><span class="nav-icon">ðŸ§ </span> State</button>
-      <button class="nav-item" data-panel="messages"><span class="nav-icon">ðŸ“¨</span> Messages</button>
+      <button class="nav-item" data-panel="sessions">
+        <svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd"/></svg>
+        Sessions
+      </button>
+      <button class="nav-item" data-panel="state">
+        <svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z"/></svg>
+        State
+      </button>
+      <button class="nav-item" data-panel="messages">
+        <svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/><path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/></svg>
+        Messages
+      </button>
     </nav>
     <div class="sidebar-footer">
       <select class="agent-select" id="agent-select"></select>
@@ -219,7 +235,7 @@
     <div class="panel active" id="panel-dashboard">
       <div class="page-header">
         <h2>Dashboard</h2>
-        <div class="page-actions"><button class="btn ghost sm" id="refresh-dashboard">â†» Refresh</button></div>
+        <div class="page-actions"><button class="btn ghost sm" id="refresh-dashboard">&#8635; Refresh</button></div>
       </div>
       <div class="panel-body">
         <div class="stats-row" id="overview-stats"></div>
@@ -235,7 +251,7 @@
     <div class="panel" id="panel-tasks">
       <div class="page-header">
         <h2>Tasks</h2>
-        <div class="page-actions"><button class="btn ghost sm" id="sync-tasks-btn">â†» Sync</button></div>
+        <div class="page-actions"><button class="btn ghost sm" id="sync-tasks-btn">&#8635; Sync</button></div>
       </div>
       <div class="panel-body">
         <div class="tasks-toolbar">
@@ -245,17 +261,37 @@
             <button class="filter-tab" data-filter="done">Done</button>
           </div>
           <div class="toolbar-right">
-            <label class="select-all-label"><input type="checkbox" id="select-all-cb"> Select all</label>
+            <label class="select-all-label"><input type="checkbox" id="select-all-cb" class="sel-cb"> Select all</label>
           </div>
         </div>
         <div class="selection-toolbar" id="selection-toolbar">
           <span class="selection-count" id="selection-count">0 selected</span>
-          <button class="btn sm success-btn" id="bulk-done-btn">âœ“ Mark Done</button>
-          <button class="btn sm ghost" id="bulk-pending-btn">â—‹ Pending</button>
-          <button class="btn sm danger" id="bulk-delete-btn">âœ• Delete</button>
-          <button class="btn sm ghost" style="margin-left:auto" id="clear-sel-btn">âœ• Clear</button>
+          <button class="btn sm success-btn" id="bulk-done-btn">&#10003; Mark Done</button>
+          <button class="btn sm ghost" id="bulk-pending-btn">&#9675; Pending</button>
+          <button class="btn sm danger" id="bulk-delete-btn">&#10005; Delete</button>
+          <button class="btn sm ghost" style="margin-left:auto" id="clear-sel-btn">&#10005; Clear</button>
         </div>
-        <div id="tasks-list"><div class="state-msg">Loadingâ€¦</div></div>
+        <div class="task-table-wrap">
+          <table class="task-table">
+            <thead>
+              <tr>
+                <th class="td-sel"></th>
+                <th class="td-pri sortable" data-col="priority">Priority <span class="sort-ind" id="sort-priority"></span></th>
+                <th class="td-title sortable" data-col="title">Title <span class="sort-ind" id="sort-title"></span></th>
+                <th class="td-ctx">Notes</th>
+                <th class="td-file sortable" data-col="source">File <span class="sort-ind" id="sort-source"></span></th>
+                <th class="td-date sortable" data-col="date">Date <span class="sort-ind" id="sort-date"></span></th>
+                <th class="td-added sortable" data-col="created_at">Added <span class="sort-ind" id="sort-created_at"></span></th>
+                <th class="td-act"></th>
+              </tr>
+            </thead>
+            <tbody id="tasks-tbody"></tbody>
+          </table>
+          <div id="tasks-empty" style="display:none" class="empty-state">
+            <div class="empty-icon">&#10003;</div>
+            <p>No tasks found.</p>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -263,12 +299,12 @@
     <div class="panel" id="panel-sessions">
       <div class="page-header">
         <h2>Sessions</h2>
-        <div class="page-actions"><button class="refresh-btn" data-refresh="sessions">â†» Refresh</button></div>
+        <div class="page-actions"><button class="refresh-btn" data-refresh="sessions">&#8635; Refresh</button></div>
       </div>
       <div class="panel-body">
         <div class="card">
           <div class="card-title">Recent Sessions</div>
-          <div id="sessions-list"><span class="state-msg">Loadingâ€¦</span></div>
+          <div id="sessions-list"><span class="state-msg">Loading&#8230;</span></div>
         </div>
       </div>
     </div>
@@ -277,10 +313,10 @@
     <div class="panel" id="panel-state">
       <div class="page-header">
         <h2>Agent State</h2>
-        <div class="page-actions"><button class="refresh-btn" data-refresh="state">â†» Refresh</button></div>
+        <div class="page-actions"><button class="refresh-btn" data-refresh="state">&#8635; Refresh</button></div>
       </div>
       <div class="panel-body">
-        <div class="card"><div class="memory-content" id="memory-content"><span class="state-msg">Loadingâ€¦</span></div></div>
+        <div class="card"><div class="memory-content" id="memory-content"><span class="state-msg">Loading&#8230;</span></div></div>
       </div>
     </div>
 
@@ -301,316 +337,376 @@
       </div>
     </div>
 
-  </div><!-- /main-content -->
-</div><!-- /app -->
+  </div>
+</div>
 
 <script>
-// â”€â”€ State â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-let token = '', currentAgent = '', allAgents = [];
-let taskFilter = 'pending';
-let selectedIds = new Set();
-let dragSrcId = null;
+var token = '', currentAgent = '', allAgents = [];
+var taskFilter = 'pending';
+var selectedIds = new Set();
+var sortCol = 'date', sortDir = 'desc';
+var cachedItems = [];
 
-// â”€â”€ API â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-async function api(path, opts = {}) {
-  const res = await fetch(path, {
-    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json', ...(opts.headers || {}) },
-    ...opts,
+// API
+async function api(path, opts) {
+  opts = opts || {};
+  var res = await fetch(path, {
+    headers: Object.assign({ Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' }, opts.headers || {}),
+    method: opts.method || 'GET',
+    body: opts.body
   });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  if (!res.ok) throw new Error('HTTP ' + res.status);
   return res.json();
 }
 
-// â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-function esc(s = '') { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function fmtDate(v) { if (!v) return 'â€”'; const d = typeof v === 'number' ? new Date(v*1000) : new Date(v); return isNaN(d) ? String(v) : d.toLocaleDateString('en-CA'); }
-function fmtDateTime(v) { if (!v) return 'â€”'; const d = typeof v === 'number' ? new Date(v*1000) : new Date(v); return isNaN(d) ? String(v) : d.toLocaleString(); }
-function timeAgo(v) { if (!v) return 'â€”'; const ms = Date.now() - (typeof v==='number' ? v*1000 : new Date(v).getTime()); if (ms < 60000) return 'just now'; if (ms < 3600000) return `${Math.floor(ms/60000)}m ago`; if (ms < 86400000) return `${Math.floor(ms/3600000)}h ago`; return `${Math.floor(ms/86400000)}d ago`; }
+// Helpers
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function fmtDate(v) { if (!v) return ''; var d = typeof v === 'number' ? new Date(v*1000) : new Date(v); return isNaN(d.getTime()) ? String(v) : d.toLocaleDateString('en-CA'); }
+function fmtDateTime(v) { if (!v) return ''; var d = typeof v === 'number' ? new Date(v*1000) : new Date(v); return isNaN(d.getTime()) ? String(v) : d.toLocaleString(); }
+function timeAgo(v) { if (!v) return ''; var ms = Date.now() - (typeof v==='number' ? v*1000 : new Date(v).getTime()); if (ms<60000) return 'just now'; if (ms<3600000) return Math.floor(ms/60000)+'m ago'; if (ms<86400000) return Math.floor(ms/3600000)+'h ago'; return Math.floor(ms/86400000)+'d ago'; }
 function saveSession() { sessionStorage.setItem('hermes_token', token); sessionStorage.setItem('hermes_agent', currentAgent); }
 function clearSession() { sessionStorage.removeItem('hermes_token'); sessionStorage.removeItem('hermes_agent'); }
 
-// â”€â”€ Login â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-document.getElementById('login-btn').addEventListener('click', async () => {
-  const btn = document.getElementById('login-btn');
-  const err = document.getElementById('login-error');
+// Login
+document.getElementById('login-btn').addEventListener('click', async function() {
+  var btn = document.getElementById('login-btn'), err = document.getElementById('login-error');
   btn.disabled = true; err.style.display = 'none';
   token = document.getElementById('token-input').value.trim();
-  try {
-    const { agents } = await api('/api/agents');
-    if (!agents.length) throw new Error('No agents');
-    saveSession(); bootApp(agents);
-  } catch { err.style.display = 'block'; btn.disabled = false; }
+  try { var r = await api('/api/agents'); if (!r.agents.length) throw 0; saveSession(); bootApp(r.agents); }
+  catch(e) { err.style.display = 'block'; btn.disabled = false; }
 });
-document.getElementById('token-input').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('login-btn').click(); });
-document.getElementById('logout-btn').addEventListener('click', () => { clearSession(); token = ''; document.getElementById('app').style.display = 'none'; document.getElementById('login-screen').style.display = 'flex'; });
+document.getElementById('token-input').addEventListener('keydown', function(e) { if (e.key==='Enter') document.getElementById('login-btn').click(); });
+document.getElementById('logout-btn').addEventListener('click', function() { clearSession(); token=''; document.getElementById('app').style.display='none'; document.getElementById('login-screen').style.display='flex'; });
 
-// â”€â”€ Boot â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Boot
 function bootApp(agents) {
   allAgents = agents;
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app').style.display = 'block';
-  const sel = document.getElementById('agent-select');
-  sel.innerHTML = agents.map(a => `<option value="${esc(a.id)}">${esc(a.name)}</option>`).join('');
-  const saved = sessionStorage.getItem('hermes_agent');
-  if (saved && agents.find(a => a.id === saved)) sel.value = saved;
+  var sel = document.getElementById('agent-select');
+  sel.innerHTML = agents.map(function(a){ return '<option value="'+esc(a.id)+'">'+esc(a.name)+'</option>'; }).join('');
+  var saved = sessionStorage.getItem('hermes_agent');
+  if (saved && agents.find(function(a){ return a.id===saved; })) sel.value = saved;
   currentAgent = sel.value;
   showPanel('dashboard');
 }
 document.getElementById('agent-select').addEventListener('change', function() {
   currentAgent = this.value; sessionStorage.setItem('hermes_agent', currentAgent);
-  const active = document.querySelector('.nav-item.active');
-  if (active?.dataset.panel) showPanel(active.dataset.panel);
+  var active = document.querySelector('.nav-item.active');
+  if (active && active.dataset.panel) showPanel(active.dataset.panel);
 });
 
-// â”€â”€ Navigation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Navigation
 function showPanel(name) {
-  document.querySelectorAll('.nav-item').forEach(b => b.classList.toggle('active', b.dataset.panel === name));
-  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-  document.getElementById(`panel-${name}`)?.classList.add('active');
-  if (name === 'dashboard') loadDashboard();
-  else if (name === 'tasks') syncAndLoadTasks();
-  else if (name === 'sessions') loadSessions();
-  else if (name === 'state') loadState();
+  document.querySelectorAll('.nav-item').forEach(function(b){ b.classList.toggle('active', b.dataset.panel===name); });
+  document.querySelectorAll('.panel').forEach(function(p){ p.classList.remove('active'); });
+  var panel = document.getElementById('panel-'+name);
+  if (panel) panel.classList.add('active');
+  if (name==='dashboard') loadDashboard();
+  else if (name==='tasks') syncAndLoadTasks();
+  else if (name==='sessions') loadSessions();
+  else if (name==='state') loadState();
 }
-document.querySelectorAll('.nav-item[data-panel]').forEach(btn => btn.addEventListener('click', () => showPanel(btn.dataset.panel)));
+document.querySelectorAll('.nav-item[data-panel]').forEach(function(btn){ btn.addEventListener('click', function(){ showPanel(btn.dataset.panel); }); });
 
-// â”€â”€ Dashboard â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Dashboard
 async function loadDashboard() {
-  const grid = document.getElementById('agent-cards-grid');
-  const statsRow = document.getElementById('overview-stats');
-  const recentEl = document.getElementById('recent-tasks-preview');
-  statsRow.innerHTML = '<div class="state-msg">Loadingâ€¦</div>';
+  var grid = document.getElementById('agent-cards-grid');
+  var statsRow = document.getElementById('overview-stats');
+  var recentEl = document.getElementById('recent-tasks-preview');
+  statsRow.innerHTML = '<span class="state-msg">Loading&#8230;</span>';
   grid.innerHTML = '';
-
-  const results = await Promise.all(allAgents.map(async agent => {
+  var results = await Promise.all(allAgents.map(async function(agent) {
     try {
-      const { sessions } = await api(`/api/${agent.id}/sessions`);
-      const wh = sessions.filter(s => s.source && s.source.includes('webhook'));
-      return { agent, total: sessions.length, wh: wh.length, last: sessions[0] };
-    } catch { return { agent, total: 0, wh: 0, last: null }; }
+      var r = await api('/api/'+agent.id+'/sessions');
+      var wh = r.sessions.filter(function(s){ return s.source && s.source.includes('webhook'); });
+      return { agent: agent, total: r.sessions.length, wh: wh.length, last: r.sessions[0] };
+    } catch(e) { return { agent: agent, total: 0, wh: 0, last: null }; }
   }));
-
-  const totSessions = results.reduce((s, r) => s + r.total, 0);
-  const totWh = results.reduce((s, r) => s + r.wh, 0);
-
-  statsRow.innerHTML = `
-    <div class="stats-card"><div class="stats-icon">ðŸ¤–</div><div><div class="stats-num">${allAgents.length}</div><div class="stats-lbl">Agents</div></div></div>
-    <div class="stats-card"><div class="stats-icon">ðŸ’¬</div><div><div class="stats-num">${totSessions}</div><div class="stats-lbl">Sessions</div></div></div>
-    <div class="stats-card"><div class="stats-icon">ðŸ“ž</div><div><div class="stats-num">${totWh}</div><div class="stats-lbl">Transcripts</div></div></div>
-  `;
-
-  results.forEach(({ agent, total, wh, last }) => {
-    const card = document.createElement('div');
-    card.className = 'agent-card';
-    card.innerHTML = `
-      <div class="agent-card-header"><div class="agent-card-name">${esc(agent.name)}</div><div class="status-pill">â— Active</div></div>
-      <div class="agent-stats">
-        <div class="stat-item"><div class="stat-value">${total}</div><div class="stat-label">Sessions</div></div>
-        <div class="stat-item"><div class="stat-value">${wh}</div><div class="stat-label">Transcripts</div></div>
-        <div class="stat-item"><div class="stat-value">â€”</div><div class="stat-label">Tasks</div></div>
-      </div>
-      <div class="agent-last">Last activity: ${last ? timeAgo(last.started_at) : 'â€”'}</div>
-    `;
-    card.addEventListener('click', () => { document.getElementById('agent-select').value = agent.id; currentAgent = agent.id; sessionStorage.setItem('hermes_agent', currentAgent); showPanel('sessions'); });
+  var totS = results.reduce(function(s,r){ return s+r.total; }, 0);
+  var totW = results.reduce(function(s,r){ return s+r.wh; }, 0);
+  statsRow.innerHTML =
+    '<div class="stats-card"><div class="stats-icon">&#128736;</div><div><div class="stats-num">'+allAgents.length+'</div><div class="stats-lbl">Agents</div></div></div>' +
+    '<div class="stats-card"><div class="stats-icon">&#128172;</div><div><div class="stats-num">'+totS+'</div><div class="stats-lbl">Sessions</div></div></div>' +
+    '<div class="stats-card"><div class="stats-icon">&#128222;</div><div><div class="stats-num">'+totW+'</div><div class="stats-lbl">Transcripts</div></div></div>';
+  results.forEach(function(r) {
+    var card = document.createElement('div'); card.className = 'agent-card';
+    card.innerHTML = '<div class="agent-card-header"><div class="agent-card-name">'+esc(r.agent.name)+'</div><div class="status-pill">&#9679; Active</div></div>' +
+      '<div class="agent-stats">' +
+        '<div class="stat-item"><div class="stat-value">'+r.total+'</div><div class="stat-label">Sessions</div></div>' +
+        '<div class="stat-item"><div class="stat-value">'+r.wh+'</div><div class="stat-label">Transcripts</div></div>' +
+        '<div class="stat-item"><div class="stat-value">-</div><div class="stat-label">Tasks</div></div>' +
+      '</div>' +
+      '<div class="agent-last">Last: '+(r.last ? timeAgo(r.last.started_at) : '-')+'</div>';
+    card.addEventListener('click', function() { document.getElementById('agent-select').value=r.agent.id; currentAgent=r.agent.id; sessionStorage.setItem('hermes_agent',currentAgent); showPanel('sessions'); });
     grid.appendChild(card);
   });
-
   try {
-    const { items } = await api('/api/tasks/items');
-    const pending = items.filter(t => t.status === 'pending').slice(0, 5);
+    var ir = await api('/api/tasks/items');
+    var pending = ir.items.filter(function(t){ return t.status==='pending'; }).slice(0,5);
     if (pending.length) {
-      recentEl.innerHTML = `
-        <div class="section-label" style="margin-top:0.25rem">Recent Tasks</div>
-        <div class="card">
-          ${pending.map(t => `<div class="task-item" style="margin-bottom:0.1rem"><div class="task-main"><div class="task-title-row"><span class="priority-badge ${esc(t.priority||'')}">${esc(t.priority||'')}</span><span class="task-title">${esc(t.title)}</span></div>${t.context ? `<div class="task-context">${esc(t.context)}</div>` : ''}</div></div>`).join('')}
-          <div style="padding-top:0.75rem;margin-top:0.5rem;border-top:1px solid var(--border)"><button class="btn ghost sm" onclick="showPanel('tasks')">View all tasks â†’</button></div>
-        </div>`;
+      recentEl.innerHTML = '<div class="section-label" style="margin-top:0.25rem">Recent Tasks</div><div class="card">' +
+        pending.map(function(t){ return '<div style="display:flex;align-items:baseline;gap:0.5rem;padding:0.5rem 0;border-bottom:1px solid var(--border)"><span class="priority-badge '+esc(t.priority||'')+'">'+esc(t.priority||'')+'</span><span style="font-size:0.875rem">'+esc(t.title)+'</span></div>'; }).join('') +
+        '<div style="padding-top:0.75rem"><button class="btn ghost sm" onclick="showPanel(\'tasks\')">View all &#8594;</button></div></div>';
     } else { recentEl.innerHTML = ''; }
-  } catch { recentEl.innerHTML = ''; }
+  } catch(e) { recentEl.innerHTML = ''; }
 }
 document.getElementById('refresh-dashboard').addEventListener('click', loadDashboard);
 
-// â”€â”€ Task Parser â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Task Parser
 function parseTasks(text) {
   if (!text) return [];
-  const out = [], re = /\*\*\[(High|Med|Medium|Low)\]\*\*\s+(.+?)(?:\s+[â€”â€“\-]+\s+(.+?))?$/gm;
-  let m;
-  while ((m = re.exec(text)) !== null) out.push({ priority: m[1].replace('Medium','Med'), title: m[2].trim(), context: m[3]?.trim() || null });
+  var out = [], re = /\*\*\[(High|Med|Medium|Low)\]\*\*\s+(.+?)(?:\s+[\u2014\u2013\-]+\s+(.+?))?$/gm, m;
+  while ((m = re.exec(text)) !== null) out.push({ priority: m[1].replace('Medium','Med'), title: m[2].trim(), context: m[3] ? m[3].trim() : null });
   return out;
 }
 
-// â”€â”€ Tasks â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Sort
+function sortItems(items) {
+  var priOrder = { High: 0, Med: 1, Low: 2 };
+  return items.slice().sort(function(a, b) {
+    var va, vb;
+    if (sortCol === 'priority') { va = priOrder[a.priority] !== undefined ? priOrder[a.priority] : 3; vb = priOrder[b.priority] !== undefined ? priOrder[b.priority] : 3; }
+    else if (sortCol === 'created_at') { va = a.created_at || 0; vb = b.created_at || 0; }
+    else { va = (a[sortCol] || '').toString().toLowerCase(); vb = (b[sortCol] || '').toString().toLowerCase(); }
+    if (va < vb) return sortDir === 'asc' ? -1 : 1;
+    if (va > vb) return sortDir === 'asc' ? 1 : -1;
+    return 0;
+  });
+}
+
+function updateSortHeaders() {
+  document.querySelectorAll('.task-table th.sortable').forEach(function(th) {
+    var col = th.dataset.col;
+    th.classList.toggle('sort-active', col === sortCol);
+    var ind = document.getElementById('sort-'+col);
+    if (ind) ind.textContent = col === sortCol ? (sortDir === 'asc' ? ' ^' : ' v') : '';
+  });
+}
+
+document.querySelectorAll('.task-table th.sortable').forEach(function(th) {
+  th.addEventListener('click', function() {
+    var col = th.dataset.col;
+    if (sortCol === col) sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+    else { sortCol = col; sortDir = col === 'created_at' || col === 'date' ? 'desc' : 'asc'; }
+    updateSortHeaders();
+    renderTaskTable();
+  });
+});
+
+// Tasks
 async function syncAndLoadTasks() {
-  document.getElementById('tasks-list').innerHTML = '<div class="state-msg">Syncingâ€¦</div>';
+  var tbody = document.getElementById('tasks-tbody');
+  tbody.innerHTML = '<tr><td colspan="8" class="state-msg">Syncing&#8230;</td></tr>';
   try {
-    const { sessions } = await api(`/api/${currentAgent}/webhook-sessions`);
-    await Promise.all(sessions.map(async s => {
-      const items = parseTasks(s.analysis);
+    var sr = await api('/api/'+currentAgent+'/webhook-sessions');
+    await Promise.all(sr.sessions.map(async function(s) {
+      var items = parseTasks(s.analysis);
       if (!items.length) return;
-      const date = s.started_at ? fmtDate(s.started_at) : new Date().toISOString().slice(0,10);
-      try { await api('/api/tasks/sync', { method: 'POST', body: JSON.stringify({ session_id: s.id, date, source: s.source, items: items.map((it, i) => ({ index: i, ...it })) }) }); } catch {}
+      var date = s.started_at ? fmtDate(s.started_at) : new Date().toISOString().slice(0,10);
+      try { await api('/api/tasks/sync', { method: 'POST', body: JSON.stringify({ session_id: s.id, date: date, source: s.source, items: items.map(function(it,i){ return Object.assign({index:i},it); }) }) }); } catch(e) {}
     }));
-  } catch {}
+  } catch(e) {}
   loadTasks();
 }
 
 async function loadTasks() {
-  const list = document.getElementById('tasks-list');
+  var tbody = document.getElementById('tasks-tbody');
   try {
-    const { items } = await api('/api/tasks/items');
-    const pendingCount = items.filter(t => t.status === 'pending').length;
-    const badge = document.getElementById('tasks-badge');
+    var r = await api('/api/tasks/items');
+    cachedItems = r.items;
+    var pendingCount = r.items.filter(function(t){ return t.status==='pending'; }).length;
+    var badge = document.getElementById('tasks-badge');
     badge.textContent = pendingCount; badge.style.display = pendingCount > 0 ? 'inline-block' : 'none';
-
-    const filtered = items.filter(t => taskFilter === 'pending' ? t.status === 'pending' : taskFilter === 'done' ? t.status === 'done' : t.status !== 'deleted');
-    if (!filtered.length) {
-      list.innerHTML = `<div class="empty-state"><div class="empty-icon">${taskFilter==='done'?'ðŸŽ‰':'âœ…'}</div><p>${taskFilter==='done'?'No completed tasks yet.':taskFilter==='pending'?'No pending tasks. Sync to load from new transcripts.':'No tasks found.'}</p></div>`;
-      updateSelUI(); return;
-    }
-
-    const groups = {};
-    filtered.forEach(t => { const d = t.date || 'Unknown'; if (!groups[d]) groups[d] = []; groups[d].push(t); });
-    list.innerHTML = '';
-    Object.keys(groups).sort((a,b) => b.localeCompare(a)).forEach(date => {
-      const g = document.createElement('div'); g.className = 'task-date-group';
-      const done = groups[date].filter(t => t.status === 'done').length;
-      g.innerHTML = `<div class="task-date-header"><span>ðŸ“… ${esc(date)}</span><span class="day-count">${done}/${groups[date].length} done</span></div>`;
-      groups[date].forEach(t => g.appendChild(buildTaskEl(t)));
-      list.appendChild(g);
-    });
-    updateSelUI();
-  } catch(e) { list.innerHTML = `<div class="state-msg" style="color:var(--error)">Error: ${e.message}</div>`; }
+    updateSortHeaders();
+    renderTaskTable();
+  } catch(e) { tbody.innerHTML = '<tr><td colspan="8" style="color:var(--error);text-align:center;padding:1rem">Error: '+esc(e.message)+'</td></tr>'; }
 }
 
-function buildTaskEl(task) {
-  const el = document.createElement('div');
-  const isDone = task.status === 'done';
-  const isSel = selectedIds.has(task.id);
-  el.className = `task-item${isDone?' done':''}${isSel?' selected':''}`;
-  el.dataset.id = task.id;
-  el.draggable = true;
-  const pri = (task.priority || '').toLowerCase();
+function renderTaskTable() {
+  var tbody = document.getElementById('tasks-tbody');
+  var emptyEl = document.getElementById('tasks-empty');
+  var filtered = cachedItems.filter(function(t) {
+    if (taskFilter === 'pending') return t.status === 'pending';
+    if (taskFilter === 'done') return t.status === 'done';
+    return t.status !== 'deleted';
+  });
+  var sorted = sortItems(filtered);
+  if (!sorted.length) {
+    tbody.innerHTML = '';
+    emptyEl.querySelector('p').textContent = taskFilter === 'done' ? 'No completed tasks yet.' : taskFilter === 'pending' ? 'No pending tasks. Click Sync to load from transcripts.' : 'No tasks found.';
+    emptyEl.style.display = 'block';
+    updateSelUI(); return;
+  }
+  emptyEl.style.display = 'none';
+  tbody.innerHTML = '';
+  sorted.forEach(function(task) { tbody.appendChild(buildTaskRow(task)); });
+  updateSelUI();
+}
 
-  el.innerHTML = `
-    <div class="drag-handle" title="Drag to reorder">â ¿</div>
-    <div class="task-cb ${isDone?'done-cb':''}" data-act="toggle" title="${isDone?'Mark pending':'Mark done'}">${isDone?'âœ“':''}</div>
-    <div class="task-cb sel-cb ${isSel?'sel-checked':''}" data-act="select">${isSel?'âœ“':''}</div>
-    <div class="task-main">
-      <div class="task-title-row">
-        ${pri?`<span class="priority-badge ${esc(task.priority)}">${esc(task.priority)}</span>`:''}
-        <span class="task-title">${esc(task.title)}</span>
-        ${task.source?`<span class="source-badge">${esc(task.source.replace(/\.txt$/i,''))}</span>`:''}
-      </div>
-      ${task.context?`<div class="task-context">${esc(task.context)}</div>`:''}
-    </div>
-    <div class="task-actions">
-      <button class="task-act-btn" data-act="toggle" title="${isDone?'Mark pending':'Mark done'}">${isDone?'â†©':'âœ“'}</button>
-      <button class="task-act-btn del" data-act="delete" title="Delete">âœ•</button>
-    </div>
-  `;
+function buildTaskRow(task) {
+  var tr = document.createElement('tr');
+  var isDone = task.status === 'done';
+  var isSel = selectedIds.has(task.id);
+  tr.className = (isDone ? 'done' : '') + (isSel ? ' selected' : '');
+  tr.dataset.id = task.id;
 
-  el.querySelector('[data-act="toggle"]').addEventListener('click', async e => { e.stopPropagation(); await api(`/api/tasks/items/${task.id}`, { method: 'PATCH', body: JSON.stringify({ status: isDone?'pending':'done' }) }); loadTasks(); });
-  el.querySelectorAll('[data-act="toggle"]').forEach(b => b.addEventListener('click', async e => { e.stopPropagation(); await api(`/api/tasks/items/${task.id}`, { method: 'PATCH', body: JSON.stringify({ status: isDone?'pending':'done' }) }); loadTasks(); }));
-  el.querySelector('[data-act="select"]').addEventListener('click', e => {
-    e.stopPropagation();
-    if (selectedIds.has(task.id)) selectedIds.delete(task.id); else selectedIds.add(task.id);
-    el.classList.toggle('selected', selectedIds.has(task.id));
-    const cb = el.querySelector('.sel-cb'); cb.classList.toggle('sel-checked', selectedIds.has(task.id)); cb.textContent = selectedIds.has(task.id)?'âœ“':'';
+  var pri = task.priority || '';
+  var source = task.source ? task.source.replace(/\.txt$/i, '') : '';
+  var dateStr = task.date || '';
+  var addedStr = task.created_at ? fmtDate(task.created_at) : '';
+
+  var cbTd = document.createElement('td'); cbTd.className = 'td-sel';
+  var cb = document.createElement('input'); cb.type = 'checkbox'; cb.className = 'sel-cb'; cb.checked = isSel;
+  cb.addEventListener('change', function() {
+    if (this.checked) selectedIds.add(task.id); else selectedIds.delete(task.id);
+    tr.classList.toggle('selected', this.checked);
     updateSelUI();
   });
-  el.querySelector('[data-act="delete"]').addEventListener('click', async e => { e.stopPropagation(); selectedIds.delete(task.id); await api(`/api/tasks/items/${task.id}`, { method: 'DELETE' }); loadTasks(); });
+  cbTd.appendChild(cb); tr.appendChild(cbTd);
 
-  el.addEventListener('dragstart', e => { dragSrcId = task.id; el.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; });
-  el.addEventListener('dragend', () => { el.classList.remove('dragging'); document.querySelectorAll('.drag-over').forEach(x => x.classList.remove('drag-over')); });
-  el.addEventListener('dragover', e => { e.preventDefault(); if (dragSrcId !== task.id) el.classList.add('drag-over'); });
-  el.addEventListener('dragleave', () => el.classList.remove('drag-over'));
-  el.addEventListener('drop', async e => {
-    e.preventDefault(); el.classList.remove('drag-over');
-    if (dragSrcId === task.id) return;
-    const g = el.closest('.task-date-group');
-    const src = g?.querySelector(`[data-id="${dragSrcId}"]`);
-    if (!src) return;
-    const items = [...g.querySelectorAll('.task-item')];
-    if (items.indexOf(src) < items.indexOf(el)) el.after(src); else el.before(src);
-    const reordered = [...g.querySelectorAll('.task-item')].map((x, i) => ({ id: parseInt(x.dataset.id), sort_order: i }));
-    await api('/api/tasks/items/reorder', { method: 'POST', body: JSON.stringify({ items: reordered }) });
+  var priTd = document.createElement('td'); priTd.className = 'td-pri';
+  if (pri) priTd.innerHTML = '<span class="priority-badge '+esc(pri)+'">'+esc(pri)+'</span>';
+  tr.appendChild(priTd);
+
+  var titleTd = document.createElement('td'); titleTd.className = 'td-title';
+  titleTd.innerHTML = '<span class="task-title-cell">'+esc(task.title)+'</span>';
+  tr.appendChild(titleTd);
+
+  var ctxTd = document.createElement('td'); ctxTd.className = 'td-ctx';
+  ctxTd.innerHTML = '<span class="ctx-cell">'+esc(task.context||'')+'</span>';
+  tr.appendChild(ctxTd);
+
+  var fileTd = document.createElement('td'); fileTd.className = 'td-file';
+  fileTd.innerHTML = '<span class="file-cell">'+esc(source)+'</span>';
+  tr.appendChild(fileTd);
+
+  var dateTd = document.createElement('td'); dateTd.className = 'td-date';
+  dateTd.innerHTML = '<span class="date-cell">'+esc(dateStr)+'</span>';
+  tr.appendChild(dateTd);
+
+  var addedTd = document.createElement('td'); addedTd.className = 'td-added';
+  addedTd.innerHTML = '<span class="added-cell">'+esc(addedStr)+'</span>';
+  tr.appendChild(addedTd);
+
+  var actTd = document.createElement('td'); actTd.className = 'td-act';
+  var delBtn = document.createElement('button'); delBtn.className = 'task-act-btn del'; delBtn.title = 'Delete'; delBtn.textContent = '\u00d7';
+  delBtn.addEventListener('click', async function(e) {
+    e.stopPropagation();
+    selectedIds.delete(task.id);
+    await api('/api/tasks/items/'+task.id, { method: 'DELETE' });
+    cachedItems = cachedItems.filter(function(t){ return t.id !== task.id; });
+    renderTaskTable();
+    var pendingCount = cachedItems.filter(function(t){ return t.status==='pending'; }).length;
+    var badge = document.getElementById('tasks-badge');
+    badge.textContent = pendingCount; badge.style.display = pendingCount > 0 ? 'inline-block' : 'none';
   });
-
-  return el;
+  actTd.appendChild(delBtn); tr.appendChild(actTd);
+  return tr;
 }
 
 function updateSelUI() {
-  const count = selectedIds.size;
-  document.getElementById('selection-count').textContent = `${count} selected`;
+  var count = selectedIds.size;
+  document.getElementById('selection-count').textContent = count + ' selected';
   document.getElementById('selection-toolbar').classList.toggle('visible', count > 0);
-  const all = document.querySelectorAll('.task-item[data-id]');
-  const cb = document.getElementById('select-all-cb');
-  cb.checked = all.length > 0 && all.length === count;
-  cb.indeterminate = count > 0 && count < all.length;
+  var allRows = document.querySelectorAll('#tasks-tbody tr[data-id]');
+  var cb = document.getElementById('select-all-cb');
+  cb.checked = allRows.length > 0 && allRows.length === count;
+  cb.indeterminate = count > 0 && count < allRows.length;
+  allRows.forEach(function(row) {
+    var rowCb = row.querySelector('.sel-cb');
+    if (rowCb) rowCb.checked = selectedIds.has(parseInt(row.dataset.id));
+  });
 }
 
-document.querySelectorAll('.filter-tab').forEach(tab => tab.addEventListener('click', () => {
-  document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active')); tab.classList.add('active');
-  taskFilter = tab.dataset.filter; selectedIds.clear(); loadTasks();
-}));
+document.querySelectorAll('.filter-tab').forEach(function(tab) {
+  tab.addEventListener('click', function() {
+    document.querySelectorAll('.filter-tab').forEach(function(t){ t.classList.remove('active'); });
+    tab.classList.add('active'); taskFilter = tab.dataset.filter; selectedIds.clear(); renderTaskTable();
+  });
+});
 document.getElementById('select-all-cb').addEventListener('change', function() {
-  document.querySelectorAll('.task-item[data-id]').forEach(el => {
-    const id = parseInt(el.dataset.id);
+  var allRows = document.querySelectorAll('#tasks-tbody tr[data-id]');
+  allRows.forEach(function(row) {
+    var id = parseInt(row.dataset.id);
     if (this.checked) selectedIds.add(id); else selectedIds.delete(id);
-    el.classList.toggle('selected', this.checked);
-    const cb = el.querySelector('.sel-cb'); if (cb) { cb.classList.toggle('sel-checked', this.checked); cb.textContent = this.checked?'âœ“':''; }
+    row.classList.toggle('selected', this.checked);
+    var rowCb = row.querySelector('.sel-cb'); if (rowCb) rowCb.checked = this.checked;
+  }.bind(this));
+  updateSelUI();
+});
+document.getElementById('bulk-done-btn').addEventListener('click', async function() {
+  if (!selectedIds.size) return;
+  await api('/api/tasks/items/bulk', { method:'POST', body: JSON.stringify({ ids:[...selectedIds], status:'done' }) });
+  selectedIds.clear(); loadTasks();
+});
+document.getElementById('bulk-pending-btn').addEventListener('click', async function() {
+  if (!selectedIds.size) return;
+  await api('/api/tasks/items/bulk', { method:'POST', body: JSON.stringify({ ids:[...selectedIds], status:'pending' }) });
+  selectedIds.clear(); loadTasks();
+});
+document.getElementById('bulk-delete-btn').addEventListener('click', async function() {
+  if (!selectedIds.size || !confirm('Delete '+selectedIds.size+' task(s)?')) return;
+  await api('/api/tasks/items/bulk', { method:'POST', body: JSON.stringify({ ids:[...selectedIds], status:'deleted' }) });
+  selectedIds.clear(); loadTasks();
+});
+document.getElementById('clear-sel-btn').addEventListener('click', function() {
+  selectedIds.clear();
+  document.querySelectorAll('#tasks-tbody tr.selected').forEach(function(row) {
+    row.classList.remove('selected');
+    var rowCb = row.querySelector('.sel-cb'); if (rowCb) rowCb.checked = false;
   });
   updateSelUI();
 });
-document.getElementById('bulk-done-btn').addEventListener('click', async () => { if (!selectedIds.size) return; await api('/api/tasks/items/bulk', { method:'POST', body: JSON.stringify({ ids:[...selectedIds], status:'done' }) }); selectedIds.clear(); loadTasks(); });
-document.getElementById('bulk-pending-btn').addEventListener('click', async () => { if (!selectedIds.size) return; await api('/api/tasks/items/bulk', { method:'POST', body: JSON.stringify({ ids:[...selectedIds], status:'pending' }) }); selectedIds.clear(); loadTasks(); });
-document.getElementById('bulk-delete-btn').addEventListener('click', async () => { if (!selectedIds.size || !confirm(`Delete ${selectedIds.size} task(s)?`)) return; await api('/api/tasks/items/bulk', { method:'POST', body: JSON.stringify({ ids:[...selectedIds], status:'deleted' }) }); selectedIds.clear(); loadTasks(); });
-document.getElementById('clear-sel-btn').addEventListener('click', () => { selectedIds.clear(); document.querySelectorAll('.task-item.selected').forEach(el => { el.classList.remove('selected'); const cb = el.querySelector('.sel-cb'); if (cb) { cb.classList.remove('sel-checked'); cb.textContent=''; } }); updateSelUI(); });
 document.getElementById('sync-tasks-btn').addEventListener('click', syncAndLoadTasks);
 
-// â”€â”€ Sessions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Sessions
 async function loadSessions() {
-  const list = document.getElementById('sessions-list');
-  list.innerHTML = '<span class="state-msg">Loadingâ€¦</span>';
+  var list = document.getElementById('sessions-list');
+  list.innerHTML = '<span class="state-msg">Loading&#8230;</span>';
   try {
-    const { sessions } = await api(`/api/${currentAgent}/sessions`);
-    if (!sessions.length) { list.innerHTML = '<span class="state-msg">No sessions found.</span>'; return; }
+    var r = await api('/api/'+currentAgent+'/sessions');
+    if (!r.sessions.length) { list.innerHTML = '<span class="state-msg">No sessions found.</span>'; return; }
     list.innerHTML = '';
-    sessions.forEach(s => {
-      const el = document.createElement('div'); el.className = 'session-item';
-      const cost = s.estimated_cost_usd != null ? ` Â· $${Number(s.estimated_cost_usd).toFixed(4)}` : '';
-      el.innerHTML = `<div class="session-main"><div class="session-title">${esc(s.title||s.id.slice(0,16)+'â€¦')}</div><div class="session-meta">${esc(s.source||'')} Â· ${s.message_count??0} msgs${cost} Â· ${fmtDateTime(s.started_at)}</div></div><button class="btn ghost sm" data-sid="${esc(s.id)}">View</button>`;
-      el.querySelector('button').addEventListener('click', () => { document.getElementById('chat-id-input').value = s.id; showPanel('messages'); setTimeout(() => document.getElementById('fetch-messages-btn').click(), 50); });
+    r.sessions.forEach(function(s) {
+      var el = document.createElement('div'); el.className = 'session-item';
+      var cost = s.estimated_cost_usd != null ? ' &middot; $'+Number(s.estimated_cost_usd).toFixed(4) : '';
+      el.innerHTML = '<div class="session-main"><div class="session-title">'+esc(s.title||s.id.slice(0,16)+'...')+'</div><div class="session-meta">'+esc(s.source||'')+' &middot; '+(s.message_count||0)+' msgs'+cost+' &middot; '+fmtDateTime(s.started_at)+'</div></div><button class="btn ghost sm" data-sid="'+esc(s.id)+'">View</button>';
+      el.querySelector('button').addEventListener('click', function() { document.getElementById('chat-id-input').value = s.id; showPanel('messages'); setTimeout(function(){ document.getElementById('fetch-messages-btn').click(); }, 50); });
       list.appendChild(el);
     });
-  } catch(e) { list.innerHTML = `<span class="state-msg" style="color:var(--error)">Error: ${e.message}</span>`; }
+  } catch(e) { list.innerHTML = '<span class="state-msg" style="color:var(--error)">Error: '+esc(e.message)+'</span>'; }
 }
 document.querySelector('[data-refresh="sessions"]').addEventListener('click', loadSessions);
 
-// â”€â”€ State â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// State
 async function loadState() {
-  const el = document.getElementById('memory-content');
-  el.innerHTML = '<span class="state-msg">Loadingâ€¦</span>';
-  try { const { memory } = await api(`/api/${currentAgent}/memory`); el.textContent = memory || '(no facts stored yet)'; }
-  catch(e) { el.innerHTML = `<span class="state-msg" style="color:var(--error)">Error: ${e.message}</span>`; }
+  var el = document.getElementById('memory-content');
+  el.innerHTML = '<span class="state-msg">Loading&#8230;</span>';
+  try { var r = await api('/api/'+currentAgent+'/memory'); el.textContent = r.memory || '(no facts stored yet)'; }
+  catch(e) { el.innerHTML = '<span class="state-msg" style="color:var(--error)">Error: '+esc(e.message)+'</span>'; }
 }
 document.querySelector('[data-refresh="state"]').addEventListener('click', loadState);
 
-// â”€â”€ Messages â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-document.getElementById('fetch-messages-btn').addEventListener('click', async () => {
-  const chatId = document.getElementById('chat-id-input').value.trim(); if (!chatId) return;
-  const list = document.getElementById('message-list'); list.innerHTML = '<span class="state-msg">Loadingâ€¦</span>';
+// Messages
+document.getElementById('fetch-messages-btn').addEventListener('click', async function() {
+  var chatId = document.getElementById('chat-id-input').value.trim(); if (!chatId) return;
+  var list = document.getElementById('message-list'); list.innerHTML = '<span class="state-msg">Loading&#8230;</span>';
   try {
-    const { messages } = await api(`/api/${currentAgent}/messages/${encodeURIComponent(chatId)}`);
-    if (!messages.length) { list.innerHTML = '<span class="state-msg">No messages for this session.</span>'; return; }
+    var r = await api('/api/'+currentAgent+'/messages/'+encodeURIComponent(chatId));
+    if (!r.messages.length) { list.innerHTML = '<span class="state-msg">No messages for this session.</span>'; return; }
     list.innerHTML = '';
-    messages.forEach(msg => { const el = document.createElement('div'); el.className = `message ${msg.role==='user'?'user':'assistant'}`; el.innerHTML = `<div class="role">${msg.role==='tool'?`tool: ${esc(msg.tool_name||'')}`:msg.role}</div>${esc(msg.content||'(no content)')}`; list.appendChild(el); });
-  } catch(e) { list.innerHTML = `<span class="state-msg" style="color:var(--error)">Error: ${e.message}</span>`; }
+    r.messages.forEach(function(msg) {
+      var el = document.createElement('div'); el.className = 'message '+(msg.role==='user'?'user':'assistant');
+      el.innerHTML = '<div class="role">'+(msg.role==='tool'?'tool: '+esc(msg.tool_name||''):msg.role)+'</div>'+esc(msg.content||'(no content)');
+      list.appendChild(el);
+    });
+  } catch(e) { list.innerHTML = '<span class="state-msg" style="color:var(--error)">Error: '+esc(e.message)+'</span>'; }
 });
 
-// â”€â”€ Auto-restore â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-const savedToken = sessionStorage.getItem('hermes_token');
-if (savedToken) { token = savedToken; api('/api/agents').then(({ agents }) => { if (!agents.length) throw 0; bootApp(agents); }).catch(clearSession); }
+// Auto-restore
+var _savedToken = sessionStorage.getItem('hermes_token');
+if (_savedToken) { token = _savedToken; api('/api/agents').then(function(r){ if (!r.agents.length) throw 0; bootApp(r.agents); }).catch(clearSession); }
 </script>
 </body>
 </html>
