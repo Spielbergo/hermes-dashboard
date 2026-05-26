@@ -93,6 +93,7 @@ def send_to_hermes(transcript: str, filename: str) -> bool:
         "event": "call-transcription",
         "text": transcript,
         "source": filename,
+        "date": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
         "timestamp": int(time.time()),
     })
     signature = hmac.new(

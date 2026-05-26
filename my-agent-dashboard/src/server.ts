@@ -4,7 +4,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { config } from './config.js';
 import { getStateMeta, getRecentMessages, getSessions, getWebhookSessions, closeAllDbs } from './memory.js';
-import { saveTaskReport, getTaskReports, closeTasksDb } from './tasks.js';
+import { saveTaskReport, getTaskReports, syncTaskItems, getTaskItems, updateTaskItem, bulkUpdateStatus, reorderTaskItems, closeTasksDb } from './tasks.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const frontendDir = path.resolve(__dirname, '..', 'frontend');
@@ -128,6 +128,73 @@ app.get('/api/tasks', (_, res) => {
     res.json({ reports: getTaskReports(30) });
   } catch (error: any) {
     console.error('Error reading task reports:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ── Task Items (individual task management) ──────────────────────────────
+
+app.post('/api/tasks/sync', (req, res) => {
+  const { session_id, date, source, items } = req.body;
+  if (!session_id || !Array.isArray(items) || !items.length) {
+    return res.status(400).json({ error: 'session_id and items[] required' });
+  }
+  try {
+    syncTaskItems(session_id, date || new Date().toISOString().slice(0, 10), source ?? null, items);
+    res.json({ ok: true });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/tasks/items', (_, res) => {
+  try {
+    res.json({ items: getTaskItems() });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.patch('/api/tasks/items/:id', (req, res) => {
+  const id = parseInt(req.params.id);
+  if (isNaN(id)) return res.status(400).json({ error: 'Invalid id' });
+  try {
+    updateTaskItem(id, req.body);
+    res.json({ ok: true });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete('/api/tasks/items/:id', (req, res) => {
+  const id = parseInt(req.params.id);
+  if (isNaN(id)) return res.status(400).json({ error: 'Invalid id' });
+  try {
+    updateTaskItem(id, { status: 'deleted' });
+    res.json({ ok: true });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/tasks/items/bulk', (req, res) => {
+  const { ids, status } = req.body;
+  if (!Array.isArray(ids) || !status) return res.status(400).json({ error: 'ids[] and status required' });
+  try {
+    bulkUpdateStatus(ids.map(Number), status);
+    res.json({ ok: true });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/tasks/items/reorder', (req, res) => {
+  const { items } = req.body;
+  if (!Array.isArray(items)) return res.status(400).json({ error: 'items[] required' });
+  try {
+    reorderTaskItems(items);
+    res.json({ ok: true });
+  } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
 });
