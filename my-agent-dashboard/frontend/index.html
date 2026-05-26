@@ -145,12 +145,22 @@
     .empty-state { text-align: center; padding: 3rem 1rem; color: var(--text-dim); }
     .empty-icon { font-size: 2rem; margin-bottom: 0.75rem; }
 
-    /* Sessions */
-    .session-item { padding: 0.85rem 0; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 1rem; }
-    .session-item:last-child { border-bottom: none; }
+    /* Sessions split layout */
+    .sessions-layout { display: flex; gap: 1rem; flex: 1; min-height: 0; overflow: hidden; }
+    .sessions-col { width: 360px; flex-shrink: 0; overflow-y: auto; display: flex; flex-direction: column; }
+    .messages-col { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 0.75rem; min-width: 0; }
+    #panel-sessions .panel-body { overflow: hidden; flex-direction: row; align-items: stretch; }
+
+    /* Session items */
+    .session-item { padding: 0.75rem; border-radius: 8px; cursor: pointer; border: 1px solid transparent; transition: background 0.1s, border-color 0.1s; }
+    .session-item:hover { background: var(--surface2); }
+    .session-item.active { background: rgba(124,106,247,0.1); border-color: rgba(124,106,247,0.3); }
+    .session-item-header { display: flex; align-items: flex-start; gap: 0.5rem; }
     .session-main { flex: 1; min-width: 0; }
-    .session-title { font-size: 0.875rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .session-meta { font-size: 0.75rem; color: var(--text-dim); margin-top: 0.2rem; }
+    .session-title { font-size: 0.82rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .session-meta { font-size: 0.72rem; color: var(--text-dim); margin-top: 0.2rem; }
+    .session-del-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.75rem; padding: 0.15rem 0.3rem; border-radius: 4px; flex-shrink: 0; line-height: 1; transition: background 0.1s, color 0.1s; }
+    .session-del-btn:hover { background: rgba(248,113,113,0.12); color: var(--error); }
 
     /* Messages */
     .message-list { display: flex; flex-direction: column; gap: 0.5rem; }
@@ -158,8 +168,6 @@
     .message.user { align-self: flex-end; background: var(--accent-dim); color: #fff; }
     .message.assistant { align-self: flex-start; background: var(--surface); border: 1px solid var(--border); }
     .message .role { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.05em; opacity: 0.65; text-transform: uppercase; margin-bottom: 0.25rem; }
-    .chat-input-row { display: flex; gap: 0.75rem; align-items: flex-end; }
-    .chat-input-row .field { flex: 1; }
 
     /* State */
     .memory-content { font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 0.82rem; line-height: 1.75; white-space: pre-wrap; word-break: break-word; }
@@ -217,10 +225,6 @@
       <button class="nav-item" data-panel="state">
         <svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z"/></svg>
         State
-      </button>
-      <button class="nav-item" data-panel="messages">
-        <svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/><path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/></svg>
-        Messages
       </button>
     </nav>
     <div class="sidebar-footer">
@@ -295,16 +299,24 @@
       </div>
     </div>
 
-    <!-- Sessions -->
+    <!-- Sessions + Messages (split view) -->
     <div class="panel" id="panel-sessions">
       <div class="page-header">
         <h2>Sessions</h2>
         <div class="page-actions"><button class="refresh-btn" data-refresh="sessions">&#8635; Refresh</button></div>
       </div>
       <div class="panel-body">
-        <div class="card">
-          <div class="card-title">Recent Sessions</div>
-          <div id="sessions-list"><span class="state-msg">Loading&#8230;</span></div>
+        <div class="sessions-layout">
+          <div class="sessions-col card">
+            <div class="card-title">Recent Sessions</div>
+            <div id="sessions-list"><span class="state-msg">Loading&#8230;</span></div>
+          </div>
+          <div class="messages-col">
+            <div class="card" style="flex:1;display:flex;flex-direction:column;">
+              <div class="card-title" id="msgs-panel-title">Messages <span id="msgs-panel-subtitle" style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-muted);font-size:0.8rem"></span></div>
+              <div class="message-list" id="message-list"><span class="state-msg">Select a session on the left.</span></div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -317,23 +329,6 @@
       </div>
       <div class="panel-body">
         <div class="card"><div class="memory-content" id="memory-content"><span class="state-msg">Loading&#8230;</span></div></div>
-      </div>
-    </div>
-
-    <!-- Messages -->
-    <div class="panel" id="panel-messages">
-      <div class="page-header"><h2>Messages</h2></div>
-      <div class="panel-body">
-        <div class="card">
-          <div class="card-title">Session Messages</div>
-          <div class="chat-input-row">
-            <div class="field"><input id="chat-id-input" type="text" placeholder="Session ID" /></div>
-            <button class="btn" id="fetch-messages-btn">Fetch</button>
-          </div>
-        </div>
-        <div class="card">
-          <div class="message-list" id="message-list"><span class="state-msg">Enter a Session ID above or click View from Sessions.</span></div>
-        </div>
       </div>
     </div>
 
@@ -504,7 +499,13 @@ async function syncAndLoadTasks() {
       var items = parseTasks(s.analysis);
       if (!items.length) return;
       var date = s.started_at ? fmtDate(s.started_at) : new Date().toISOString().slice(0,10);
-      try { await api('/api/tasks/sync', { method: 'POST', body: JSON.stringify({ session_id: s.id, date: date, source: s.source, items: items.map(function(it,i){ return Object.assign({index:i},it); }) }) }); } catch(e) {}
+      // Extract actual .txt filename from the webhook payload stored in first_user_msg
+      var filename = s.source || '';
+      if (s.first_user_msg) {
+        try { var pl = JSON.parse(s.first_user_msg); if (pl.source) filename = pl.source; } catch(e) {}
+      }
+      if (!filename || /^webhook$/i.test(filename.trim())) filename = s.title || s.source || '';
+      try { await api('/api/tasks/sync', { method: 'POST', body: JSON.stringify({ session_id: s.id, date: date, source: filename, items: items.map(function(it,i){ return Object.assign({index:i},it); }) }) }); } catch(e) {}
     }));
   } catch(e) {}
   loadTasks();
@@ -661,6 +662,8 @@ document.getElementById('clear-sel-btn').addEventListener('click', function() {
 document.getElementById('sync-tasks-btn').addEventListener('click', syncAndLoadTasks);
 
 // Sessions
+var activeSessionId = null;
+
 async function loadSessions() {
   var list = document.getElementById('sessions-list');
   list.innerHTML = '<span class="state-msg">Loading&#8230;</span>';
@@ -669,15 +672,59 @@ async function loadSessions() {
     if (!r.sessions.length) { list.innerHTML = '<span class="state-msg">No sessions found.</span>'; return; }
     list.innerHTML = '';
     r.sessions.forEach(function(s) {
-      var el = document.createElement('div'); el.className = 'session-item';
-      var cost = s.estimated_cost_usd != null ? ' &middot; $'+Number(s.estimated_cost_usd).toFixed(4) : '';
-      el.innerHTML = '<div class="session-main"><div class="session-title">'+esc(s.title||s.id.slice(0,16)+'...')+'</div><div class="session-meta">'+esc(s.source||'')+' &middot; '+(s.message_count||0)+' msgs'+cost+' &middot; '+fmtDateTime(s.started_at)+'</div></div><button class="btn ghost sm" data-sid="'+esc(s.id)+'">View</button>';
-      el.querySelector('button').addEventListener('click', function() { document.getElementById('chat-id-input').value = s.id; showPanel('messages'); setTimeout(function(){ document.getElementById('fetch-messages-btn').click(); }, 50); });
+      var el = document.createElement('div'); el.className = 'session-item'; el.dataset.sid = s.id;
+      var cost = s.estimated_cost_usd != null ? ' $'+Number(s.estimated_cost_usd).toFixed(4) : '';
+      el.innerHTML =
+        '<div class="session-item-header">' +
+          '<div class="session-main">' +
+            '<div class="session-title">'+esc(s.title||s.id.slice(0,20)+'...')+'</div>' +
+            '<div class="session-meta">'+esc(s.source||'')+' &middot; '+(s.message_count||0)+' msgs'+cost+' &middot; '+fmtDateTime(s.started_at)+'</div>' +
+          '</div>' +
+          '<button class="session-del-btn" title="Delete session" data-del="'+esc(s.id)+'">&times;</button>' +
+        '</div>';
+      el.addEventListener('click', function(e) {
+        if (e.target.dataset.del) return;
+        document.querySelectorAll('.session-item').forEach(function(i){ i.classList.remove('active'); });
+        el.classList.add('active');
+        loadSessionMessages(s.id, s.title);
+      });
+      el.querySelector('[data-del]').addEventListener('click', async function(e) {
+        e.stopPropagation();
+        if (!confirm('Delete session "'+((s.title||s.id).slice(0,60))+'"?\nThis will permanently remove it and all its messages.')) return;
+        try {
+          await api('/api/'+currentAgent+'/sessions/'+encodeURIComponent(s.id), { method:'DELETE' });
+          el.remove();
+          if (activeSessionId === s.id) {
+            activeSessionId = null;
+            document.getElementById('message-list').innerHTML = '<span class="state-msg">Session deleted.</span>';
+            document.getElementById('msgs-panel-subtitle').textContent = '';
+          }
+        } catch(err) { alert('Delete failed: '+err.message); }
+      });
       list.appendChild(el);
     });
   } catch(e) { list.innerHTML = '<span class="state-msg" style="color:var(--error)">Error: '+esc(e.message)+'</span>'; }
 }
 document.querySelector('[data-refresh="sessions"]').addEventListener('click', loadSessions);
+
+async function loadSessionMessages(sessionId, title) {
+  activeSessionId = sessionId;
+  var msgList = document.getElementById('message-list');
+  var subtitle = document.getElementById('msgs-panel-subtitle');
+  subtitle.textContent = title ? '- '+title : '';
+  msgList.innerHTML = '<span class="state-msg">Loading&#8230;</span>';
+  try {
+    var r = await api('/api/'+currentAgent+'/messages/'+encodeURIComponent(sessionId));
+    if (!r.messages.length) { msgList.innerHTML = '<span class="state-msg">No messages for this session.</span>'; return; }
+    msgList.innerHTML = '';
+    r.messages.forEach(function(msg) {
+      var el = document.createElement('div'); el.className = 'message '+(msg.role==='user'?'user':'assistant');
+      el.innerHTML = '<div class="role">'+(msg.role==='tool'?'tool: '+esc(msg.tool_name||''):esc(msg.role))+'</div>'+esc(msg.content||'(no content)');
+      msgList.appendChild(el);
+    });
+    msgList.lastChild.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  } catch(e) { msgList.innerHTML = '<span class="state-msg" style="color:var(--error)">Error: '+esc(e.message)+'</span>'; }
+}
 
 // State
 async function loadState() {
@@ -687,22 +734,6 @@ async function loadState() {
   catch(e) { el.innerHTML = '<span class="state-msg" style="color:var(--error)">Error: '+esc(e.message)+'</span>'; }
 }
 document.querySelector('[data-refresh="state"]').addEventListener('click', loadState);
-
-// Messages
-document.getElementById('fetch-messages-btn').addEventListener('click', async function() {
-  var chatId = document.getElementById('chat-id-input').value.trim(); if (!chatId) return;
-  var list = document.getElementById('message-list'); list.innerHTML = '<span class="state-msg">Loading&#8230;</span>';
-  try {
-    var r = await api('/api/'+currentAgent+'/messages/'+encodeURIComponent(chatId));
-    if (!r.messages.length) { list.innerHTML = '<span class="state-msg">No messages for this session.</span>'; return; }
-    list.innerHTML = '';
-    r.messages.forEach(function(msg) {
-      var el = document.createElement('div'); el.className = 'message '+(msg.role==='user'?'user':'assistant');
-      el.innerHTML = '<div class="role">'+(msg.role==='tool'?'tool: '+esc(msg.tool_name||''):msg.role)+'</div>'+esc(msg.content||'(no content)');
-      list.appendChild(el);
-    });
-  } catch(e) { list.innerHTML = '<span class="state-msg" style="color:var(--error)">Error: '+esc(e.message)+'</span>'; }
-});
 
 // Auto-restore
 var _savedToken = sessionStorage.getItem('hermes_token');

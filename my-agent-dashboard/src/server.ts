@@ -3,7 +3,7 @@ import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { config } from './config.js';
-import { getStateMeta, getRecentMessages, getSessions, getWebhookSessions, closeAllDbs } from './memory.js';
+import { getStateMeta, getRecentMessages, getSessions, getWebhookSessions, deleteSession, closeAllDbs } from './memory.js';
 import { saveTaskReport, getTaskReports, syncTaskItems, getTaskItems, updateTaskItem, bulkUpdateStatus, reorderTaskItems, closeTasksDb } from './tasks.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -86,6 +86,19 @@ app.get('/api/:agentId/messages/:sessionId', (req, res) => {
   } catch (error: any) {
     console.error('Error fetching messages:', error);
     res.status(500).json({ error: `Failed to fetch messages: ${error.message}` });
+  }
+});
+
+// Delete a session and its messages
+app.delete('/api/:agentId/sessions/:sessionId', (req, res) => {
+  const agent = resolveAgent(req.params.agentId);
+  if (!agent) return res.status(404).json({ error: 'Agent not found' });
+  try {
+    deleteSession(agent.dbPath, req.params.sessionId);
+    res.json({ ok: true });
+  } catch (error: any) {
+    console.error('Error deleting session:', error);
+    res.status(500).json({ error: `Failed to delete session: ${error.message}` });
   }
 });
 

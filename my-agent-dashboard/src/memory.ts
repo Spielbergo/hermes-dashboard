@@ -50,7 +50,10 @@ export function getWebhookSessions(dbPath: string, limit = 30) {
       `SELECT s.id, s.title, s.source, s.started_at,
               (SELECT content FROM messages
                WHERE session_id = s.id AND role = 'assistant'
-               ORDER BY timestamp DESC LIMIT 1) as analysis
+               ORDER BY timestamp DESC LIMIT 1) as analysis,
+              (SELECT content FROM messages
+               WHERE session_id = s.id AND role = 'user'
+               ORDER BY timestamp ASC LIMIT 1) as first_user_msg
        FROM sessions s
        WHERE s.source LIKE '%webhook%'
        ORDER BY s.started_at DESC LIMIT ?`
@@ -58,6 +61,21 @@ export function getWebhookSessions(dbPath: string, limit = 30) {
     return rows;
   } catch {
     return [];
+  }
+}
+
+// Delete a session and all its messages
+export function deleteSession(dbPath: string, sessionId: string): void {
+  // Invalidate the readonly cache so it can be reopened after write
+  const cached = dbCache.get(dbPath);
+  if (cached) { cached.close(); dbCache.delete(dbPath); }
+  const db = new Database(dbPath);
+  try {
+    db.pragma('journal_mode = WAL');
+    db.prepare('DELETE FROM messages WHERE session_id = ?').run(sessionId);
+    db.prepare('DELETE FROM sessions WHERE id = ?').run(sessionId);
+  } finally {
+    db.close();
   }
 }
 
