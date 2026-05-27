@@ -93,6 +93,32 @@
     .agent-last { margin-top: 0.85rem; font-size: 0.75rem; color: var(--text-dim); }
     .section-label { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.75rem; }
 
+    /* Workflow cards */
+    .workflow-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 0.875rem; }
+    .workflow-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; display: flex; flex-direction: column; gap: 0.85rem; transition: border-color 0.15s, transform 0.1s; }
+    .workflow-card:hover { border-color: rgba(251,146,60,0.4); transform: translateY(-1px); }
+    .workflow-card.inactive { opacity: 0.6; }
+    .workflow-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.5rem; }
+    .workflow-title-row { display: flex; align-items: center; gap: 0.6rem; }
+    .workflow-icon { font-size: 1.3rem; width: 36px; height: 36px; background: rgba(251,146,60,0.1); border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .workflow-name { font-size: 0.9rem; font-weight: 600; }
+    .workflow-cat { font-size: 0.62rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: rgba(251,146,60,0.9); background: rgba(251,146,60,0.1); border-radius: 4px; padding: 0.1rem 0.4rem; }
+    .workflow-desc { font-size: 0.78rem; color: var(--text-dim); line-height: 1.45; }
+    .workflow-meta { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; flex-wrap: wrap; }
+    .workflow-schedule { font-size: 0.72rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.3rem; }
+    .workflow-actions { display: flex; gap: 0.4rem; align-items: center; margin-top: auto; flex-wrap: wrap; }
+    .pill-orange { font-size: 0.68rem; font-weight: 600; padding: 0.2rem 0.55rem; border-radius: 999px; background: rgba(251,146,60,0.1); color: rgba(251,146,60,0.9); border: 1px solid rgba(251,146,60,0.25); }
+    .pill-dim { font-size: 0.68rem; font-weight: 600; padding: 0.2rem 0.55rem; border-radius: 999px; background: var(--surface2); color: var(--text-muted); border: 1px solid var(--border); }
+    .pill-green { font-size: 0.68rem; font-weight: 600; padding: 0.2rem 0.55rem; border-radius: 999px; background: rgba(74,222,128,0.1); color: var(--success); border: 1px solid rgba(74,222,128,0.25); }
+    .pill-red { font-size: 0.68rem; font-weight: 600; padding: 0.2rem 0.55rem; border-radius: 999px; background: rgba(248,113,113,0.1); color: var(--error); border: 1px solid rgba(248,113,113,0.25); }
+    /* Category section header */
+    .agents-section-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem; }
+    .agents-section-header .section-label { margin-bottom: 0; }
+    .agents-section-divider { flex: 1; height: 1px; background: var(--border); }
+    /* Future placeholder card */
+    .workflow-card.placeholder { border-style: dashed; opacity: 0.45; cursor: default; }
+    .workflow-card.placeholder:hover { transform: none; border-color: var(--border); }
+
     /* Task toolbar */
     .tasks-toolbar { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 0.65rem 1rem; display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
     .filter-tabs { display: flex; gap: 0.25rem; }
@@ -244,8 +270,12 @@
       <div class="panel-body">
         <div class="stats-row" id="overview-stats"></div>
         <div>
-          <div class="section-label">Agents</div>
+          <div class="agents-section-header"><div class="section-label">Hermes Agents</div><div class="agents-section-divider"></div></div>
           <div class="agent-grid" id="agent-cards-grid"></div>
+        </div>
+        <div>
+          <div class="agents-section-header"><div class="section-label">Automation Workflows</div><div class="agents-section-divider"></div></div>
+          <div class="workflow-grid" id="automation-grid"></div>
         </div>
         <div id="recent-tasks-preview"></div>
       </div>
@@ -430,21 +460,23 @@ async function loadDashboard() {
   var totS = results.reduce(function(s,r){ return s+r.total; }, 0);
   var totW = results.reduce(function(s,r){ return s+r.wh; }, 0);
   statsRow.innerHTML =
-    '<div class="stats-card"><div class="stats-icon">&#128736;</div><div><div class="stats-num">'+allAgents.length+'</div><div class="stats-lbl">Agents</div></div></div>' +
+    '<div class="stats-card"><div class="stats-icon">&#129302;</div><div><div class="stats-num">'+(allAgents.length+2)+'</div><div class="stats-lbl">Agents</div></div></div>' +
     '<div class="stats-card"><div class="stats-icon">&#128172;</div><div><div class="stats-num">'+totS+'</div><div class="stats-lbl">Sessions</div></div></div>' +
     '<div class="stats-card"><div class="stats-icon">&#128222;</div><div><div class="stats-num">'+totW+'</div><div class="stats-lbl">Transcripts</div></div></div>';
   results.forEach(function(r) {
     var card = document.createElement('div'); card.className = 'agent-card';
-    card.innerHTML = '<div class="agent-card-header"><div class="agent-card-name">'+esc(r.agent.name)+'</div><div class="status-pill">&#9679; Active</div></div>' +
+    var agentIcons = { cli: '&#128187;', webui: '&#127760;', host: '&#9881;' };
+    var icon = agentIcons[r.agent.id] || '&#129302;';
+    card.innerHTML = '<div class="agent-card-header"><div class="agent-card-name">'+icon+' '+esc(r.agent.name)+'</div><div class="status-pill">&#9679; Active</div></div>' +
       '<div class="agent-stats">' +
         '<div class="stat-item"><div class="stat-value">'+r.total+'</div><div class="stat-label">Sessions</div></div>' +
-        '<div class="stat-item"><div class="stat-value">'+r.wh+'</div><div class="stat-label">Transcripts</div></div>' +
-        '<div class="stat-item"><div class="stat-value">-</div><div class="stat-label">Tasks</div></div>' +
-      '</div>' +
-      '<div class="agent-last">Last: '+(r.last ? timeAgo(r.last.started_at) : '-')+'</div>';
+        '<div class="stat-item"><div class="stat-value">'+r.wh+'</div><div class="stat-label">Webhooks</div></div>' +
+        '<div class="stat-item"><div class="stat-value">'+(r.last ? timeAgo(r.last.started_at) : '-')+'</div><div class="stat-label">Last Active</div></div>' +
+      '</div>';
     card.addEventListener('click', function() { document.getElementById('agent-select').value=r.agent.id; currentAgent=r.agent.id; sessionStorage.setItem('hermes_agent',currentAgent); showPanel('sessions'); });
     grid.appendChild(card);
   });
+  loadAutomationCards();
   try {
     var ir = await api('/api/tasks/items');
     var pending = ir.items.filter(function(t){ return t.status==='pending'; }).slice(0,5);
@@ -456,6 +488,87 @@ async function loadDashboard() {
   } catch(e) { recentEl.innerHTML = ''; }
 }
 document.getElementById('refresh-dashboard').addEventListener('click', loadDashboard);
+
+// Automation Workflow Cards
+var AUTOMATIONS = [
+  {
+    id: 'transcript-processor',
+    name: 'Call Transcripts',
+    icon: '&#127897;',
+    category: 'Calls & Tasks',
+    desc: 'Polls Google Drive for call recordings and sends transcripts to Hermes for task extraction.',
+    schedule: 'Every 5 min',
+    statusFn: function() { return api('/api/drive/status'); },
+    actions: function(status) {
+      var pollingOn = status && status.enabled;
+      var processed = status && status.processed_count !== undefined ? status.processed_count : '?';
+      return [
+        '<span class="'+(pollingOn?'pill-green':'pill-red')+'">'+(pollingOn?'&#9679; Polling ON':'&#9679; Polling OFF')+'</span>',
+        '<span class="pill-dim">'+processed+' processed</span>',
+        '<button class="btn ghost sm" id="wf-run-btn" style="padding:0.2rem 0.6rem;font-size:0.72rem">&#9654; Run Now</button>'
+      ].join('');
+    }
+  },
+  {
+    id: 'chat-processor',
+    name: 'Google Chat',
+    icon: '&#128172;',
+    category: 'Communications',
+    desc: 'Reads daily Google Chat DMs with Mike and sends transcripts to Hermes for context and memory.',
+    schedule: 'Daily 01:00 UTC',
+    statusFn: null,
+    actions: function() {
+      return '<span class="pill-orange">&#128344; Scheduled</span><span class="pill-dim">mike@yopie.ca</span>';
+    }
+  },
+];
+
+var FUTURE_AUTOMATIONS = [
+  { name: 'Review Bot', icon: '&#128269;', category: 'Quality', desc: 'Reviews AI-generated work for errors and brand issues.' },
+  { name: 'Social Posts', icon: '&#128248;', category: 'Socials', desc: 'Drafts and schedules social media content.' },
+  { name: 'Google Ads', icon: '&#128202;', category: 'Ads', desc: 'Reports on ad performance and flags budget issues.' },
+];
+
+async function loadAutomationCards() {
+  var grid = document.getElementById('automation-grid');
+  grid.innerHTML = '';
+  for (var i = 0; i < AUTOMATIONS.length; i++) {
+    var wf = AUTOMATIONS[i];
+    var status = null;
+    if (wf.statusFn) { try { status = await wf.statusFn(); } catch(e) {} }
+    var card = document.createElement('div'); card.className = 'workflow-card';
+    card.dataset.wfId = wf.id;
+    card.innerHTML =
+      '<div class="workflow-header">' +
+        '<div class="workflow-title-row"><div class="workflow-icon">'+wf.icon+'</div><div><div class="workflow-name">'+esc(wf.name)+'</div><div class="workflow-cat">'+esc(wf.category)+'</div></div></div>' +
+      '</div>' +
+      '<div class="workflow-desc">'+esc(wf.desc)+'</div>' +
+      '<div class="workflow-meta"><span class="workflow-schedule">&#128336; '+esc(wf.schedule)+'</span></div>' +
+      '<div class="workflow-actions" id="wf-actions-'+esc(wf.id)+'">'+wf.actions(status)+'</div>';
+    grid.appendChild(card);
+    var runBtn = card.querySelector('#wf-run-btn');
+    if (runBtn) {
+      runBtn.addEventListener('click', async function(e) {
+        e.stopPropagation(); var btn = e.target; btn.disabled = true; btn.textContent = '&#8987; Running…';
+        try {
+          var r = await api('/api/drive/run', { method: 'POST' });
+          btn.textContent = '&#10003; Done ('+(r.processed||0)+')';
+          setTimeout(async function() { await loadAutomationCards(); await syncAndLoadTasks(); }, 2000);
+        } catch(err) { alert('Run failed: '+err.message); btn.disabled = false; btn.innerHTML = '&#9654; Run Now'; }
+      });
+    }
+  }
+  FUTURE_AUTOMATIONS.forEach(function(wf) {
+    var card = document.createElement('div'); card.className = 'workflow-card placeholder';
+    card.innerHTML =
+      '<div class="workflow-header">' +
+        '<div class="workflow-title-row"><div class="workflow-icon" style="opacity:0.5">'+wf.icon+'</div><div><div class="workflow-name" style="color:var(--text-muted)">'+esc(wf.name)+'</div><div class="workflow-cat">'+esc(wf.category)+'</div></div></div>' +
+      '</div>' +
+      '<div class="workflow-desc">'+esc(wf.desc)+'</div>' +
+      '<div class="workflow-meta"><span class="pill-dim">Coming soon</span></div>';
+    grid.appendChild(card);
+  });
+}
 
 // Task Parser
 function parseTasks(text) {
