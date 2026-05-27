@@ -332,17 +332,30 @@ def chat_processor(request):
 
 
 def list_spaces_helper():
-    """Helper: list all DM spaces accessible to IMPERSONATE_USER.
+    """Helper: list all DM spaces with a sample message to help identify them.
     Useful for finding CHAT_SPACE_ID. Call with GET ?action=list_spaces."""
     try:
         service = get_chat_service()
-        resp = service.spaces().list(filter="spaceType = DIRECT_MESSAGE", pageSize=50).execute()
+        resp = service.spaces().list(pageSize=100).execute()
         spaces = []
         for s in resp.get("spaces", []):
+            space_name = s.get("name")
+            sample = ""
+            try:
+                msg_resp = service.spaces().messages().list(
+                    parent=space_name, pageSize=3, orderBy="createTime desc"
+                ).execute()
+                for msg in msg_resp.get("messages", []):
+                    sender = msg.get("sender", {}).get("displayName", "?")
+                    text = msg.get("text", "")[:60]
+                    ts = msg.get("createTime", "")[:10]
+                    sample += f"[{ts}] {sender}: {text}\n"
+            except Exception as e:
+                sample = f"(error: {e})"
             spaces.append({
-                "name": s.get("name"),
-                "displayName": s.get("displayName") or "(no display name)",
+                "name": space_name,
                 "type": s.get("spaceType"),
+                "recent_messages": sample.strip() or "(no messages)",
             })
         return (json.dumps(spaces, indent=2), 200, {"Content-Type": "application/json"})
     except Exception as e:
