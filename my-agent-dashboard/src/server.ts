@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { createHmac } from 'crypto';
 import { config } from './config.js';
 import { getStateMeta, getRecentMessages, getSessions, getWebhookSessions, deleteSession, closeAllDbs } from './memory.js';
 import { saveTaskReport, getTaskReports, syncTaskItems, getTaskItems, updateTaskItem, bulkUpdateStatus, reorderTaskItems, closeTasksDb } from './tasks.js';
@@ -210,6 +211,58 @@ app.post('/api/tasks/items/reorder', (req, res) => {
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
+});
+
+// ── Drive Polling Control ─────────────────────────────────────────────────
+
+async function callProcessor(action: string): Promise<{ ok: boolean; data?: any; error?: string }> {
+  const url = config.transcriptProcessorUrl;
+  if (!url) return { ok: false, error: 'TRANSCRIPT_PROCESSOR_URL not configured' };
+  const secret = config.transcriptProcessorSecret;
+  const body = JSON.stringify({ action });
+  const sig = 'sha256=' + createHmac('sha256', secret).update(body).digest('hex');
+  const method = action === 'status' ? 'GET' : 'POST';
+  const reqUrl = method === 'GET' ? `${url}?action=${action}` : url + `?action=${action}`;
+  try {
+    const res = await fetch(reqUrl, {
+      method,
+      headers: { 'Content-Type': 'application/json', 'X-Hub-Signature-256': sig },
+      body: method === 'POST' ? body : undefined,
+      signal: AbortSignal.timeout(30000),
+    });
+    const data = await res.json();
+    return { ok: res.ok, data };
+  } catch (e: any) {
+    return { ok: false, error: e.message };
+  }
+}
+
+// GET /api/drive/status — polling enabled flag + processed count
+app.get('/api/drive/status', async (_, res) => {
+  const result = await callProcessor('status');
+  if (!result.ok) return res.status(502).json({ error: result.error ?? 'Upstream error' });
+  res.json(result.data);
+});
+
+// POST /api/drive/enable — enable Drive polling
+app.post('/api/drive/enable', async (_, res) => {
+  const result = await callProcessor('enable');
+  if (!result.ok) return res.status(502).json({ error: result.error ?? 'Upstream error' });
+  res.json(result.data);
+});
+
+// POST /api/drive/disable — disable Drive polling
+app.post('/api/drive/disable', async (_, res) => {
+  const result = await callProcessor('disable');
+  if (!result.ok) return res.status(502).json({ error: result.error ?? 'Upstream error' });
+  res.json(result.data);
+});
+
+// POST /api/drive/run — trigger an immediate poll now
+app.post('/api/drive/run', async (_, res) => {
+  const result = await callProcessor('run');
+  if (!result.ok) return res.status(502).json({ error: result.error ?? 'Upstream error' });
+  res.json(result.data);
 });
 
 // Fallback: serve index.html for any non-API route (SPA catch-all)

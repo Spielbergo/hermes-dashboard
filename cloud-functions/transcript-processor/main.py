@@ -1,17 +1,22 @@
 ﻿"""
-Transcript Processor â€” GCP Cloud Function
+Transcript Processor - GCP Cloud Function
 ==========================================
 Runs on a Cloud Scheduler cron (e.g. every 5 minutes).
 1. Polls a Google Drive folder for new .txt transcription files.
 2. Sends each new transcript to the Hermes webhook for AI analysis.
 3. Records processed file IDs in a GCS state bucket to avoid duplicates.
 
+Management actions (require X-Hub-Signature-256 HMAC header with HERMES_WEBHOOK_SECRET):
+  GET  ?action=status          - returns { enabled, processed_count }
+  POST ?action=enable          - enables Drive polling
+  POST ?action=disable         - disables Drive polling
+  POST ?action=run             - triggers an immediate poll regardless of enabled state
+
 Required environment variables (set in Cloud Function config):
-  DRIVE_FOLDER_ID         â€” Google Drive folder ID to watch
-  HERMES_WEBHOOK_URL      â€” Full URL of your Hermes webhook endpoint
-                            e.g. http://srv1694637.hstgr.cloud:8644/webhooks/call-transcription
-  HERMES_WEBHOOK_SECRET   â€” HMAC secret shown when you ran: hermes webhook subscribe
-  GCS_STATE_BUCKET        â€” GCS bucket name used to store processed file IDs
+  DRIVE_FOLDER_ID         - Google Drive folder ID to watch
+  HERMES_WEBHOOK_URL      - Full URL of your Hermes webhook endpoint
+  HERMES_WEBHOOK_SECRET   - HMAC secret used to sign webhook payloads + authenticate management calls
+  GCS_STATE_BUCKET        - GCS bucket name used to store processed file IDs
 """
 
 import os
@@ -36,6 +41,47 @@ HERMES_WEBHOOK_SECRET = os.environ["HERMES_WEBHOOK_SECRET"]
 GCS_STATE_BUCKET      = os.environ["GCS_STATE_BUCKET"]
 
 PROCESSED_FILES_KEY = "processed_file_ids.json"
+POLLING_STATE_KEY   = "polling_state.json"
+
+
+# ── Auth helper ──────────────────────────────────────────────────────────────
+
+def _verify_hmac(request) -> bool:
+    """Return True if the request carries a valid HMAC-SHA256 signature."""
+    sig_header = request.headers.get("X-Hub-Signature-256", "")
+    if not sig_header.startswith("sha256="):
+        return False
+    body = request.get_data()
+    expected = "sha256=" + hmac.new(
+        HERMES_WEBHOOK_SECRET.encode(), body, hashlib.sha256
+    ).hexdigest()
+    return hmac.compare_digest(expected, sig_header)
+
+
+# ── Polling-enabled state (stored in GCS) ────────────────────────────────────
+
+def get_polling_enabled() -> bool:
+    """Read the polling-enabled flag from GCS. Defaults to False."""
+    try:
+        client = gcs.Client()
+        blob = client.bucket(GCS_STATE_BUCKET).blob(POLLING_STATE_KEY)
+        if not blob.exists():
+            return False
+        data = json.loads(blob.download_as_text())
+        return bool(data.get("enabled", False))
+    except Exception as e:
+        log.warning("Could not read polling state: %s", e)
+        return False
+
+
+def set_polling_enabled(enabled: bool) -> None:
+    """Write the polling-enabled flag to GCS."""
+    client = gcs.Client()
+    blob = client.bucket(GCS_STATE_BUCKET).blob(POLLING_STATE_KEY)
+    blob.upload_from_string(
+        json.dumps({"enabled": enabled, "updated_at": datetime.now(timezone.utc).isoformat()}),
+        content_type="application/json",
+    )
 
 
 # â”€â”€ GCS state helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -125,8 +171,39 @@ def send_to_hermes(transcript: str, filename: str) -> bool:
 def process_transcripts(request):
     """
     HTTP Cloud Function entry point.
-    Triggered by Cloud Scheduler (no request body needed).
+    Triggered by Cloud Scheduler (no request body needed), or called manually.
+    Also handles management actions via ?action= query parameter.
     """
+    action = request.args.get("action", "")
+
+    # ── Management actions ──────────────────────────────────────────────────
+    if action == "status":
+        enabled = get_polling_enabled()
+        try:
+            ids = load_processed_ids(GCS_STATE_BUCKET)
+            count = len(ids)
+        except Exception:
+            count = -1
+        return {"enabled": enabled, "processed_count": count}, 200
+
+    if action in ("enable", "disable", "run"):
+        if not _verify_hmac(request):
+            return {"error": "Unauthorized"}, 401
+        if action == "enable":
+            set_polling_enabled(True)
+            log.info("Drive polling enabled via management API")
+            return {"ok": True, "enabled": True}, 200
+        if action == "disable":
+            set_polling_enabled(False)
+            log.info("Drive polling disabled via management API")
+            return {"ok": True, "enabled": False}, 200
+        # action == "run": fall through to run the poll now regardless of flag
+
+    # ── Scheduled / manual run ──────────────────────────────────────────────
+    if action == "" and not get_polling_enabled():
+        log.info("Drive polling is disabled — skipping run")
+        return {"status": "disabled"}, 200
+
     log.info("Starting transcript processor run")
 
     drive_service = get_drive_service()

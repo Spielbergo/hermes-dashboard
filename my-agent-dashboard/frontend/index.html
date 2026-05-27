@@ -255,7 +255,12 @@
     <div class="panel" id="panel-tasks">
       <div class="page-header">
         <h2>Tasks</h2>
-        <div class="page-actions"><button class="btn ghost sm" id="sync-tasks-btn">&#8635; Sync</button></div>
+        <div class="page-actions" style="display:flex;align-items:center;gap:0.5rem;">
+          <span id="polling-badge" style="display:none;font-size:0.72rem;padding:0.2rem 0.55rem;border-radius:999px;border:1px solid var(--border);color:var(--text-dim);">&#8226; checking&hellip;</span>
+          <button class="btn ghost sm" id="polling-toggle-btn" style="display:none;" title="Toggle Drive polling">Enable Polling</button>
+          <button class="btn ghost sm" id="drive-run-btn" title="Process any new Drive files now">&#9654; Run Now</button>
+          <button class="btn ghost sm" id="sync-tasks-btn">&#8635; Sync</button>
+        </div>
       </div>
       <div class="panel-body">
         <div class="tasks-toolbar">
@@ -402,7 +407,7 @@ function showPanel(name) {
   var panel = document.getElementById('panel-'+name);
   if (panel) panel.classList.add('active');
   if (name==='dashboard') loadDashboard();
-  else if (name==='tasks') syncAndLoadTasks();
+  else if (name==='tasks') { syncAndLoadTasks(); refreshPollingStatus(); }
   else if (name==='sessions') loadSessions();
   else if (name==='state') loadState();
 }
@@ -665,7 +670,55 @@ document.getElementById('clear-sel-btn').addEventListener('click', function() {
 });
 document.getElementById('sync-tasks-btn').addEventListener('click', syncAndLoadTasks);
 
-// Sessions
+// ── Drive Polling Controls ────────────────────────────────────────────────
+var pollingEnabled = null;
+
+async function refreshPollingStatus() {
+  var badge = document.getElementById('polling-badge');
+  var toggleBtn = document.getElementById('polling-toggle-btn');
+  badge.style.display = 'inline-block';
+  badge.textContent = '• checking…';
+  toggleBtn.style.display = 'none';
+  try {
+    var r = await api('/api/drive/status');
+    pollingEnabled = r.enabled;
+    badge.textContent = r.enabled ? '• Polling ON' : '• Polling OFF';
+    badge.style.color = r.enabled ? 'var(--success, #4caf50)' : 'var(--text-dim)';
+    badge.style.borderColor = r.enabled ? 'var(--success, #4caf50)' : 'var(--border)';
+    toggleBtn.textContent = r.enabled ? 'Disable Polling' : 'Enable Polling';
+    toggleBtn.style.display = 'inline-block';
+  } catch(e) {
+    badge.textContent = '• unavailable';
+  }
+}
+
+document.getElementById('polling-toggle-btn').addEventListener('click', async function() {
+  var action = pollingEnabled ? 'disable' : 'enable';
+  this.disabled = true;
+  try {
+    await api('/api/drive/' + action, { method: 'POST' });
+    await refreshPollingStatus();
+  } catch(e) { alert('Toggle failed: ' + e.message); }
+  this.disabled = false;
+});
+
+document.getElementById('drive-run-btn').addEventListener('click', async function() {
+  var btn = this;
+  btn.disabled = true;
+  btn.textContent = '⏳ Running…';
+  try {
+    var r = await api('/api/drive/run', { method: 'POST' });
+    var processed = r.processed !== undefined ? r.processed : '?';
+    btn.textContent = '✓ Done (' + processed + ' new)';
+    setTimeout(function() { btn.textContent = '▶ Run Now'; btn.disabled = false; }, 3000);
+    await syncAndLoadTasks();
+  } catch(e) {
+    alert('Run failed: ' + e.message);
+    btn.textContent = '▶ Run Now';
+    btn.disabled = false;
+  }
+});
+
 var activeSessionId = null;
 
 async function loadSessions() {

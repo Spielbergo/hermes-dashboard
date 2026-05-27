@@ -38,4 +38,6 @@ export const config = {
   dashboardToken: process.env.DASHBOARD_TOKEN!,
   port: parseInt(process.env.PORT || '5173', 10),
   corsOrigin: process.env.CORS_ORIGIN || '',
+  transcriptProcessorUrl: process.env.TRANSCRIPT_PROCESSOR_URL || '',
+  transcriptProcessorSecret: process.env.TRANSCRIPT_PROCESSOR_SECRET || '',
 };
