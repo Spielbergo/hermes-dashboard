@@ -10,3 +10,6 @@ dist/
 
 cloud-functions/transcript-processor/chat-sa-key.json
 cloud-functions/chat-processor/requirements.txt
+docker/mcp-servers/docker-compose-gmail.yml
+docker/mcp-servers/gcp-oauth.keys.json
+docker/mcp-servers/credentials.json
