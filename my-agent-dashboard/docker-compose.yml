@@ -6,16 +6,14 @@ services:
       - DASHBOARD_TOKEN=${DASHBOARD_TOKEN}
       - PORT=5173
       # Multi-agent: semicolon-separated entries of "id:Display Name:/mount/path/state.db"
-      - AGENTS=cli:Hermes CLI:/data/cli/state.db;webui:Hermes WebUI:/data/webui/state.db;host:Hermes Gateway:/data/host/state.db
+      - AGENTS=webui:Hermes WebUI:/data/webui/state.db;host:Hermes Gateway:/data/host/state.db
       # Drive polling control
       - TRANSCRIPT_PROCESSOR_URL=${TRANSCRIPT_PROCESSOR_URL}
       - TRANSCRIPT_PROCESSOR_SECRET=${TRANSCRIPT_PROCESSOR_SECRET}
     volumes:
-      # CLI agent — bind mount (host path)
-      - /docker/hermes-agent-tshi/data:/data/cli
-      # WebUI agent — named volume (Docker-managed)
+      # WebUI agent — Mike's chat interface (named volume, Docker-managed)
       - hermes-webui-8qvh_hermes-home:/data/webui
-      # Host gateway agent — where webhook-processed transcripts are stored
+      # Gateway agent — webhook receiver, SOUL.md, automation learning
       - /root/.hermes:/data/host
     labels:
       - "traefik.enable=true"
