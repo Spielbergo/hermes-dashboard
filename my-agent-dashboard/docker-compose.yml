@@ -7,6 +7,9 @@ services:
       - PORT=5173
       # Multi-agent: semicolon-separated entries of "id:Display Name:/mount/path/state.db"
       - AGENTS=cli:Hermes CLI:/data/cli/state.db;webui:Hermes WebUI:/data/webui/state.db;host:Hermes Gateway:/data/host/state.db
+      # Drive polling control
+      - TRANSCRIPT_PROCESSOR_URL=${TRANSCRIPT_PROCESSOR_URL}
+      - TRANSCRIPT_PROCESSOR_SECRET=${TRANSCRIPT_PROCESSOR_SECRET}
     volumes:
       # CLI agent — bind mount (host path)
       - /docker/hermes-agent-tshi/data:/data/cli
