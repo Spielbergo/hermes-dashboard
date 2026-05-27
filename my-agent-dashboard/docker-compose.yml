@@ -9,11 +9,11 @@ services:
       - AGENTS=cli:Hermes CLI:/data/cli/state.db;webui:Hermes WebUI:/data/webui/state.db;host:Hermes Gateway:/data/host/state.db
     volumes:
       # CLI agent — bind mount (host path)
-      - /docker/hermes-agent-tshi/data:/data/cli:ro
+      - /docker/hermes-agent-tshi/data:/data/cli
       # WebUI agent — named volume (Docker-managed)
-      - hermes-webui-8qvh_hermes-home:/data/webui:ro
+      - hermes-webui-8qvh_hermes-home:/data/webui
       # Host gateway agent — where webhook-processed transcripts are stored
-      - /root/.hermes:/data/host:ro
+      - /root/.hermes:/data/host
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=my-agent-dashboard_default"

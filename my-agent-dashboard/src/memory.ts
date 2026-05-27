@@ -69,7 +69,7 @@ export function deleteSession(dbPath: string, sessionId: string): void {
   // Invalidate the readonly cache so it can be reopened after write
   const cached = dbCache.get(dbPath);
   if (cached) { cached.close(); dbCache.delete(dbPath); }
-  const db = new Database(dbPath);
+  const db = new Database(dbPath, { timeout: 5000 });
   try {
     db.pragma('journal_mode = WAL');
     db.prepare('DELETE FROM messages WHERE session_id = ?').run(sessionId);
