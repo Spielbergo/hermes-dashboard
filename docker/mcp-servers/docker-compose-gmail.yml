@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  gmail-mcp:
+    image: node:20-alpine
+    container_name: gmail-mcp
+    restart: unless-stopped
+    working_dir: /app
+    command: ["npx", "-y", "@gongrzhe/server-gmail-autoauth-mcp", "start"]
+    environment:
+      - GMAIL_OAUTH_PATH=/gmail-server/gcp-oauth.keys.json
+      - GMAIL_CREDENTIALS_PATH=/gmail-server/credentials.json
+    volumes:
+      - /root/.gmail-mcp:/gmail-server
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.gmail-mcp.rule=Host(`gmail.srv1694637.hstgr.cloud`)
+      - traefik.http.routers.gmail-mcp.entrypoints=websecure
+      - traefik.http.routers.gmail-mcp.tls.certresolver=letsencrypt
+      - traefik.http.services.gmail-mcp.loadbalancer.server.port=3000
+    ports:
+      - "3000"
+
+networks:
+  default:
+    external:
+      name: my-agent-dashboard_default

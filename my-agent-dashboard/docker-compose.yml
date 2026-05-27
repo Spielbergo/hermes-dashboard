@@ -5,6 +5,7 @@ services:
     environment:
       - DASHBOARD_TOKEN=${DASHBOARD_TOKEN}
       - PORT=5173
+      - TASKS_DB_PATH=/app/data/tasks.db
       # Multi-agent: semicolon-separated entries of "id:Display Name:/mount/path/state.db"
       - AGENTS=webui:Hermes WebUI:/data/webui/state.db;host:Hermes Gateway:/data/host/state.db
       # Drive polling control
@@ -15,6 +16,8 @@ services:
       - hermes-webui-8qvh_hermes-home:/data/webui
       # Gateway agent — webhook receiver, SOUL.md, automation learning
       - /root/.hermes:/data/host
+      # Tasks database — persisted on host so it survives container restarts
+      - /root/my-agent-dashboard/my-agent-dashboard/data/tasks.db:/app/data/tasks.db
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=my-agent-dashboard_default"

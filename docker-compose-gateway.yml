@@ -1,0 +1,52 @@
+name: hermes-gateway
+
+services:
+  hermes-agent:
+    image: nousresearch/hermes-agent:latest
+    user: "0:0"
+    command: gateway run
+    ports:
+      - "8644:8644"
+    volumes:
+      - /root/.hermes:/home/hermes/.hermes
+      - hermes-agent-src:/opt/hermes
+    environment:
+      - HERMES_HOME=/home/hermes/.hermes
+      - HERMES_SKIP_CHMOD=1
+    restart: unless-stopped
+    networks:
+      - hermes-net
+
+  hermes-webui:
+    image: ghcr.io/nesquena/hermes-webui:latest
+    depends_on:
+      - hermes-agent
+    ports:
+      - "8787"
+    labels:
+      - traefik.enable=true
+      - "traefik.http.routers.hermes-gateway.rule=Host(`hermes.srv1694637.hstgr.cloud`)"
+      - traefik.http.routers.hermes-gateway.entrypoints=websecure
+      - traefik.http.routers.hermes-gateway.tls.certresolver=letsencrypt
+      - traefik.http.services.hermes-gateway.loadbalancer.server.port=8787
+    volumes:
+      - /root/.hermes:/home/hermeswebui/.hermes
+      - hermes-agent-src:/home/hermeswebui/.hermes/hermes-agent:ro
+      - /root/workspace:/workspace
+    environment:
+      - HERMES_WEBUI_HOST=0.0.0.0
+      - HERMES_WEBUI_PORT=8787
+      - HERMES_WEBUI_STATE_DIR=/home/hermeswebui/.hermes/webui
+      - HERMES_WEBUI_DEFAULT_WORKSPACE=/workspace
+      - HERMES_WEBUI_PASSWORD=${HERMES_WEBUI_PASSWORD}
+      - HERMES_SKIP_CHMOD=1
+    restart: unless-stopped
+    networks:
+      - hermes-net
+
+networks:
+  hermes-net:
+    driver: bridge
+
+volumes:
+  hermes-agent-src:
