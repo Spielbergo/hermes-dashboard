@@ -11,7 +11,7 @@ services:
     command:
       - sh
       - -c
-      - "npx -y supergateway --port 3000 --stdio 'npx -y @gongrzhe/server-gmail-autoauth-mcp start'"
+      - "npx -y supergateway --port 3000 --outputTransport streamableHttp --stateful --stdio 'npx -y @gongrzhe/server-gmail-autoauth-mcp start'"
     environment:
       - GMAIL_OAUTH_PATH=/gmail-server/gcp-oauth.keys.json
       - GMAIL_CREDENTIALS_PATH=/gmail-server/credentials.json

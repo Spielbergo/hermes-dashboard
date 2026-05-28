@@ -268,7 +268,7 @@ app.post('/api/drive/run', async (_, res) => {
 // ── MCP Integration Health Checks ────────────────────────────────────────
 
 const MCP_INTEGRATIONS: { id: string; name: string; url: string }[] = [
-  { id: 'gmail',    name: 'Gmail',            url: 'https://gmail.srv1694637.hstgr.cloud/sse' },
+  { id: 'gmail',    name: 'Gmail',            url: 'https://gmail.srv1694637.hstgr.cloud/mcp' },
   { id: 'calendar', name: 'Google Calendar',  url: 'https://calendar.srv1694637.hstgr.cloud/mcp' },
   { id: 'sheets',   name: 'Google Sheets',    url: 'https://sheets.srv1694637.hstgr.cloud/sse' },
 ];
