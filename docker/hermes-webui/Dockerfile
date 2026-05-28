@@ -7,8 +7,7 @@ USER root
 ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
 
 # Install Playwright with all system dependencies (runs apt-get internally)
-RUN python -m playwright install --with-deps chromium
-
+RUN pip install playwright && python -m playwright install --with-deps chromium
 # Ensure the browser directory is accessible to all users
 RUN chmod -R o+rx /ms-playwright
 
