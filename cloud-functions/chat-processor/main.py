@@ -273,7 +273,7 @@ def list_dm_spaces(service) -> list:
     spaces = []
     page_token = None
     while True:
-        params = {"pageSize": 100, "filter": 'spaceType = "DIRECT_MESSAGE"'}
+        params = {"pageSize": 100}
         if page_token:
             params["pageToken"] = page_token
         try:
@@ -281,7 +281,10 @@ def list_dm_spaces(service) -> list:
         except HttpError as e:
             log.warning("Could not list spaces: %s", e)
             break
-        spaces.extend(resp.get("spaces", []))
+        # Filter client-side -- the API filter parameter is unreliable for spaceType
+        for s in resp.get("spaces", []):
+            if s.get("spaceType") == "DIRECT_MESSAGE":
+                spaces.append(s)
         page_token = resp.get("nextPageToken")
         if not page_token:
             break
@@ -319,14 +322,15 @@ def chat_processor(request):
     if CHAT_SPACE_ID:
         spaces_to_process = [{"name": CHAT_SPACE_ID, "displayName": CHAT_SPACE_ID}]
     else:
-        spaces_to_process = list_dm_spaces(service)
+        all_dm_spaces = list_dm_spaces(service)
+        log.info("list_dm_spaces returned %d space(s): %s", len(all_dm_spaces), [s.get("name") for s in all_dm_spaces])
         # Filter out the Google Chat "tips" bot (no real human messages)
         spaces_to_process = [
-            s for s in spaces_to_process
+            s for s in all_dm_spaces
             if s.get("name") != "spaces/rkhHu8AAAAE"
             and not s.get("singleUserBotDm", False)
         ]
-        log.info("Discovered %d DM space(s) to process", len(spaces_to_process))
+        log.info("Discovered %d DM space(s) to process (after filter): %s", len(spaces_to_process), [s.get("name") for s in spaces_to_process])
 
     state = load_processed_dates(GCS_STATE_BUCKET)  # {space_id: set(dates)}
 
