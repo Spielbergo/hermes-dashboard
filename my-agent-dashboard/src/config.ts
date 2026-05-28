@@ -40,4 +40,5 @@ export const config = {
   corsOrigin: process.env.CORS_ORIGIN || '',
   transcriptProcessorUrl: process.env.TRANSCRIPT_PROCESSOR_URL || '',
   transcriptProcessorSecret: process.env.TRANSCRIPT_PROCESSOR_SECRET || '',
+  chatProcessorUrl: process.env.CHAT_PROCESSOR_URL || '',
 };

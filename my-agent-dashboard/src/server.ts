@@ -265,6 +265,29 @@ app.post('/api/drive/run', async (_, res) => {
   res.json(result.data);
 });
 
+// ── Chat Processor ────────────────────────────────────────────────────────
+
+// POST /api/chat/run — trigger an immediate Google Chat pull
+app.post('/api/chat/run', async (_, res) => {
+  const url = config.chatProcessorUrl;
+  if (!url) return res.status(502).json({ error: 'CHAT_PROCESSOR_URL not configured' });
+  try {
+    const r = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({}),
+      signal: AbortSignal.timeout(120000),
+    });
+    const text = await r.text();
+    // Response is plain text like "Done. Processed N chat transcript(s)."
+    const match = text.match(/(\d+)/);
+    const processed = match ? parseInt(match[1]) : 0;
+    res.json({ ok: r.ok, processed, message: text.trim() });
+  } catch (e: any) {
+    res.status(502).json({ error: e.message });
+  }
+});
+
 // ── MCP Integration Health Checks ────────────────────────────────────────
 
 const MCP_INTEGRATIONS: { id: string; name: string; url: string }[] = [

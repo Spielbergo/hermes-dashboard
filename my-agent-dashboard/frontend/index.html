@@ -532,11 +532,11 @@ var AUTOMATIONS = [
     name: 'Google Chat',
     icon: '&#128172;',
     category: 'Communications',
-    desc: 'Reads daily Google Chat DMs with Mike and sends transcripts to Hermes for context and memory.',
+    desc: 'Reads Google Chat DMs and sends transcripts to Hermes for task extraction. Runs daily; pull manually to process new messages immediately.',
     schedule: 'Daily 01:00 UTC',
     statusFn: null,
     actions: function() {
-      return '<span class="pill-orange">&#128344; Scheduled</span><span class="pill-dim">mike@yopie.ca</span>';
+      return '<span class="pill-orange">&#128344; Scheduled</span><span class="pill-dim">All DM spaces</span><button class="btn ghost sm" id="wf-chat-run-btn" style="padding:0.2rem 0.6rem;font-size:0.72rem">&#9654; Pull Now</button>';
     }
   },
 ];
@@ -573,6 +573,18 @@ async function loadAutomationCards() {
           btn.textContent = '&#10003; Done ('+(r.processed||0)+')';
           setTimeout(async function() { await loadAutomationCards(); await syncAndLoadTasks(); }, 2000);
         } catch(err) { alert('Run failed: '+err.message); btn.disabled = false; btn.innerHTML = '&#9654; Run Now'; }
+      });
+    }
+    var chatRunBtn = card.querySelector('#wf-chat-run-btn');
+    if (chatRunBtn) {
+      chatRunBtn.addEventListener('click', async function(e) {
+        e.stopPropagation(); var btn = e.target; btn.disabled = true; btn.innerHTML = '&#8987; Pulling…';
+        try {
+          var r = await api('/api/chat/run', { method: 'POST' });
+          btn.innerHTML = '&#10003; Done ('+(r.processed||0)+')';
+          if (r.processed > 0) setTimeout(async function() { await syncAndLoadTasks(); }, 2000);
+          setTimeout(function() { btn.disabled = false; btn.innerHTML = '&#9654; Pull Now'; }, 4000);
+        } catch(err) { alert('Pull failed: '+err.message); btn.disabled = false; btn.innerHTML = '&#9654; Pull Now'; }
       });
     }
   }
