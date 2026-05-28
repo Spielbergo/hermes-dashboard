@@ -1,0 +1,13 @@
+
+mcp_servers:
+  calendar:
+    url: "https://calendar.srv1694637.hstgr.cloud/mcp"
+    auth: oauth
+    timeout: 120
+    connect_timeout: 30
+    supports_parallel_tool_calls: false
+    tools:
+      include: [list-calendars, list-events, get-event, search-events, create-event, update-event, delete-event, get-freebusy, get-current-time, respond-to-event]
+      resources: false
+      prompts: false
+    enabled: true

@@ -2,7 +2,7 @@
 
 mcp_servers:
   gmail:
-    url: "https://gmail.srv1694637.hstgr.cloud/mcp"
+    url: "https://gmail.srv1694637.hstgr.cloud/sse"
     auth: oauth
     timeout: 120
     connect_timeout: 30

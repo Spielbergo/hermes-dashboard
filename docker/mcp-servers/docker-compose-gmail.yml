@@ -1,12 +1,17 @@
-version: '3.8'
-
 services:
+
+  # ── Gmail ──────────────────────────────────────────────────────────────────
+  # @gongrzhe/server-gmail-autoauth-mcp uses stdio transport.
+  # supergateway wraps it as HTTP/SSE on port 3000 so Traefik can reach it.
   gmail-mcp:
     image: node:20-alpine
     container_name: gmail-mcp
     restart: unless-stopped
     working_dir: /app
-    command: ["npx", "-y", "@gongrzhe/server-gmail-autoauth-mcp", "start"]
+    command:
+      - sh
+      - -c
+      - "npx -y supergateway --port 3000 --stdio 'npx -y @gongrzhe/server-gmail-autoauth-mcp start'"
     environment:
       - GMAIL_OAUTH_PATH=/gmail-server/gcp-oauth.keys.json
       - GMAIL_CREDENTIALS_PATH=/gmail-server/credentials.json
@@ -18,8 +23,59 @@ services:
       - traefik.http.routers.gmail-mcp.entrypoints=websecure
       - traefik.http.routers.gmail-mcp.tls.certresolver=letsencrypt
       - traefik.http.services.gmail-mcp.loadbalancer.server.port=3000
-    ports:
-      - "3000"
+
+  # ── Google Calendar ────────────────────────────────────────────────────────
+  # @cocal/google-calendar-mcp has native HTTP transport — no supergateway needed.
+  # Requires Desktop app type OAuth credentials (NOT Web application type).
+  # Auth: run `docker compose run --rm calendar-mcp npx @cocal/google-calendar-mcp auth`
+  calendar-mcp:
+    image: node:20-alpine
+    container_name: calendar-mcp
+    restart: unless-stopped
+    working_dir: /app
+    command:
+      - sh
+      - -c
+      - "npx -y @cocal/google-calendar-mcp"
+    environment:
+      - TRANSPORT=http
+      - HOST=0.0.0.0
+      - PORT=3000
+      - GOOGLE_OAUTH_CREDENTIALS=/calendar-server/gcp-oauth.keys.json
+      - GOOGLE_CALENDAR_MCP_TOKEN_PATH=/calendar-server/tokens
+    volumes:
+      - /root/.calendar-mcp:/calendar-server
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.calendar-mcp.rule=Host(`calendar.srv1694637.hstgr.cloud`)
+      - traefik.http.routers.calendar-mcp.entrypoints=websecure
+      - traefik.http.routers.calendar-mcp.tls.certresolver=letsencrypt
+      - traefik.http.services.calendar-mcp.loadbalancer.server.port=3000
+
+  # ── Google Sheets ──────────────────────────────────────────────────────────
+  # mcp-google-sheets is Python-based. Uses a service account — no OAuth browser
+  # flow needed. Exposes SSE transport on port 8000.
+  # Set SHEETS_SA_CREDENTIALS_B64 in .env (base64 of service account JSON).
+  # Set SHEETS_DRIVE_FOLDER_ID in .env (Google Drive folder ID shared with the SA).
+  sheets-mcp:
+    image: ghcr.io/astral-sh/uv:python3.12-bookworm-slim
+    container_name: sheets-mcp
+    restart: unless-stopped
+    command:
+      - uvx
+      - mcp-google-sheets@latest
+    environment:
+      - TRANSPORT=sse
+      - HOST=0.0.0.0
+      - PORT=8000
+      - CREDENTIALS_CONFIG=${SHEETS_SA_CREDENTIALS_B64}
+      - DRIVE_FOLDER_ID=${SHEETS_DRIVE_FOLDER_ID:-}
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.sheets-mcp.rule=Host(`sheets.srv1694637.hstgr.cloud`)
+      - traefik.http.routers.sheets-mcp.entrypoints=websecure
+      - traefik.http.routers.sheets-mcp.tls.certresolver=letsencrypt
+      - traefik.http.services.sheets-mcp.loadbalancer.server.port=8000
 
 networks:
   default:

@@ -492,6 +492,24 @@ document.getElementById('refresh-dashboard').addEventListener('click', loadDashb
 // Automation Workflow Cards
 var AUTOMATIONS = [
   {
+    id: 'gmail',
+    name: 'Gmail',
+    icon: '&#9993;',
+    category: 'Communications',
+    desc: 'Hermes can read, search, and draft emails via Gmail. OAuth credentials are stored on the server.',
+    schedule: 'On-demand (MCP)',
+    statusFn: function() { return api('/api/integrations'); },
+    _integration_id: 'gmail',
+    actions: function(status) {
+      var online = status && status.integrations && status.integrations.find(function(i) { return i.id === 'gmail'; });
+      var isOnline = online && online.online;
+      return [
+        '<span class="'+(isOnline ? 'pill-green' : 'pill-red')+'">'+(isOnline ? '&#9679; Connected' : '&#9679; Offline')+'</span>',
+        '<span class="pill-dim">draft · read · search</span>'
+      ].join('');
+    }
+  },
+  {
     id: 'transcript-processor',
     name: 'Call Transcripts',
     icon: '&#127897;',

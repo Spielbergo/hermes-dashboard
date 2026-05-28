@@ -265,6 +265,39 @@ app.post('/api/drive/run', async (_, res) => {
   res.json(result.data);
 });
 
+// ── MCP Integration Health Checks ────────────────────────────────────────
+
+const MCP_INTEGRATIONS: { id: string; name: string; url: string }[] = [
+  { id: 'gmail',    name: 'Gmail',            url: 'https://gmail.srv1694637.hstgr.cloud/sse' },
+  { id: 'calendar', name: 'Google Calendar',  url: 'https://calendar.srv1694637.hstgr.cloud/mcp' },
+  { id: 'sheets',   name: 'Google Sheets',    url: 'https://sheets.srv1694637.hstgr.cloud/sse' },
+];
+
+async function checkMcpHealth(url: string): Promise<boolean> {
+  try {
+    const res = await fetch(url, {
+      headers: { Accept: 'text/event-stream' },
+      signal: AbortSignal.timeout(5000),
+    });
+    // SSE endpoint returns 200 with event-stream content-type when healthy
+    return res.ok || res.status === 200;
+  } catch {
+    return false;
+  }
+}
+
+// GET /api/integrations — returns health status for all MCP integrations
+app.get('/api/integrations', async (_, res) => {
+  const results = await Promise.all(
+    MCP_INTEGRATIONS.map(async (m) => ({
+      id: m.id,
+      name: m.name,
+      online: await checkMcpHealth(m.url),
+    }))
+  );
+  res.json({ integrations: results });
+});
+
 // Fallback: serve index.html for any non-API route (SPA catch-all)
 app.get('/{*splat}', (_, res) => res.sendFile(path.join(frontendDir, 'index.html')));
 

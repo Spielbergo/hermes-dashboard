@@ -1,0 +1,12 @@
+
+mcp_servers:
+  sheets:
+    url: "https://sheets.srv1694637.hstgr.cloud/sse"
+    timeout: 120
+    connect_timeout: 30
+    supports_parallel_tool_calls: false
+    tools:
+      include: [list_spreadsheets, get_sheet_data, update_cells, batch_update_cells, create_spreadsheet, list_sheets, create_sheet, find_in_spreadsheet, search_spreadsheets, get_multiple_sheet_data]
+      resources: false
+      prompts: false
+    enabled: true
