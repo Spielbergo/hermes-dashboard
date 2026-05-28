@@ -41,8 +41,7 @@ Runs on a Cloud Scheduler cron (e.g. daily at 01:00).
      --oidc-service-account-email=<invoker-sa>@<project>.iam.gserviceaccount.com
 
 Required environment variables:
-  CHAT_SPACE_ID          -- e.g. "spaces/AAAAxxxxxxx"
-  IMPERSONATE_USER       -- Email of one of the DM members (e.g. "you@company.com")
+  IMPERSONATE_USER       -- Email of the user whose DMs to read (e.g. "you@company.com")
   SERVICE_ACCOUNT_JSON   -- Full service account JSON key as a string
   HERMES_WEBHOOK_URL     -- e.g. http://srv1694637.hstgr.cloud:8644/webhooks/call-transcription
   HERMES_WEBHOOK_SECRET  -- HMAC secret from: hermes webhook subscribe
@@ -51,6 +50,7 @@ Required environment variables:
 Optional environment variables:
   LOOKBACK_DAYS          -- Days to look back on first run (default: 7)
   MIN_MESSAGES           -- Skip days with fewer messages than this (default: 2)
+  CHAT_SPACE_ID          -- If set, only process this one space; otherwise all active DM spaces
 """
 
 import os
@@ -74,13 +74,15 @@ log = logging.getLogger(__name__)
 CHAT_SCOPES = [
     "https://www.googleapis.com/auth/chat.messages.readonly",
     "https://www.googleapis.com/auth/chat.spaces.readonly",
+    "https://www.googleapis.com/auth/chat.memberships.readonly",
 ]
 
+# State key maps space_id -> set of processed date strings
 PROCESSED_DATES_KEY = "processed_chat_dates.json"
 
 # -- Config from environment ---------------------------------------------------
 
-CHAT_SPACE_ID       = os.environ.get("CHAT_SPACE_ID", "")
+CHAT_SPACE_ID       = os.environ.get("CHAT_SPACE_ID", "")  # optional; if blank, all DM spaces are processed
 IMPERSONATE_USER    = os.environ.get("IMPERSONATE_USER", "")
 SA_JSON_STR         = os.environ.get("SERVICE_ACCOUNT_JSON", "")
 HERMES_WEBHOOK_URL  = os.environ.get("HERMES_WEBHOOK_URL", "")
@@ -109,22 +111,30 @@ def get_chat_service():
 
 # -- GCS state helpers ---------------------------------------------------------
 
-def load_processed_dates(bucket_name: str) -> set:
+def load_processed_dates(bucket_name: str) -> dict:
+    """Return {space_id: set(date_strings)} for all tracked spaces."""
     client = gcs.Client()
     bucket = client.bucket(bucket_name)
     blob = bucket.blob(PROCESSED_DATES_KEY)
     if not blob.exists():
-        return set()
+        return {}
     data = json.loads(blob.download_as_text())
-    return set(data.get("dates", []))
+    # Support both old format (top-level "dates" list) and new per-space format
+    if "spaces" in data:
+        return {space_id: set(dates) for space_id, dates in data["spaces"].items()}
+    return {}
 
 
-def save_processed_dates(bucket_name: str, dates: set) -> None:
+def save_processed_dates(bucket_name: str, state: dict) -> None:
+    """Persist {space_id: set(date_strings)} to GCS."""
     client = gcs.Client()
     bucket = client.bucket(bucket_name)
     blob = bucket.blob(PROCESSED_DATES_KEY)
     blob.upload_from_string(
-        json.dumps({"dates": sorted(dates), "updated_at": datetime.now(timezone.utc).isoformat()}),
+        json.dumps({
+            "spaces": {space_id: sorted(dates) for space_id, dates in state.items()},
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+        }),
         content_type="application/json",
     )
 
@@ -161,10 +171,12 @@ def list_messages_for_day(service, space_id: str, date_str: str) -> list:
     day_start = datetime.strptime(date_str, "%Y-%m-%d").replace(tzinfo=timezone.utc)
     day_end = day_start + timedelta(days=1)
 
-    # Chat API filter uses RFC3339
-    start_ts = day_start.strftime("%Y-%m-%dT%H:%M:%SZ")
+    # Chat API filter uses RFC3339. Only '>' (not '>=') is supported by the API.
+    # Subtract 1s from start so the boundary message at exactly 00:00:00 is included.
+    start_adj = day_start - timedelta(seconds=1)
+    start_ts = start_adj.strftime("%Y-%m-%dT%H:%M:%SZ")
     end_ts = day_end.strftime("%Y-%m-%dT%H:%M:%SZ")
-    msg_filter = f'createTime >= "{start_ts}" AND createTime < "{end_ts}"'
+    msg_filter = f'createTime > "{start_ts}" AND createTime < "{end_ts}"'
 
     messages = []
     page_token = None
@@ -256,13 +268,32 @@ def send_to_hermes(transcript: str, source_name: str, date_str: str) -> bool:
 
 # -- Main entry point ----------------------------------------------------------
 
+def list_dm_spaces(service) -> list:
+    """Return all DIRECT_MESSAGE spaces accessible to the impersonated user."""
+    spaces = []
+    page_token = None
+    while True:
+        params = {"pageSize": 100, "filter": 'spaceType = "DIRECT_MESSAGE"'}
+        if page_token:
+            params["pageToken"] = page_token
+        try:
+            resp = service.spaces().list(**params).execute()
+        except HttpError as e:
+            log.warning("Could not list spaces: %s", e)
+            break
+        spaces.extend(resp.get("spaces", []))
+        page_token = resp.get("nextPageToken")
+        if not page_token:
+            break
+    return spaces
+
+
 @functions_framework.http
 def chat_processor(request):
     """HTTP Cloud Function entry point. Called by Cloud Scheduler daily."""
 
-    # Validate required config
+    # Validate required config (CHAT_SPACE_ID is now optional)
     missing = [k for k, v in {
-        "CHAT_SPACE_ID": CHAT_SPACE_ID,
         "IMPERSONATE_USER": IMPERSONATE_USER,
         "SERVICE_ACCOUNT_JSON": SA_JSON_STR,
         "HERMES_WEBHOOK_URL": HERMES_WEBHOOK_URL,
@@ -278,57 +309,77 @@ def chat_processor(request):
     if request.method == "GET" and request.args.get("action") == "list_spaces":
         return list_spaces_helper()
 
-    processed_dates = load_processed_dates(GCS_STATE_BUCKET)
-
-    # Determine which dates to process (yesterday + any missed days within LOOKBACK_DAYS)
-    today = datetime.now(timezone.utc).date()
-    dates_to_process = []
-    for days_ago in range(1, LOOKBACK_DAYS + 1):
-        d = (today - timedelta(days=days_ago)).isoformat()
-        if d not in processed_dates:
-            dates_to_process.append(d)
-
-    if not dates_to_process:
-        log.info("No new dates to process.")
-        return ("No new dates to process.", 200)
-
-    log.info("Dates to process: %s", dates_to_process)
-
     try:
         service = get_chat_service()
-        members = get_space_members(service, CHAT_SPACE_ID)
-        log.info("Space members resolved: %s", members)
     except Exception as e:
         log.error("Failed to initialise Chat API: %s", e)
         return (f"Chat API init failed: {e}", 500)
 
+    # Resolve which spaces to process
+    if CHAT_SPACE_ID:
+        spaces_to_process = [{"name": CHAT_SPACE_ID, "displayName": CHAT_SPACE_ID}]
+    else:
+        spaces_to_process = list_dm_spaces(service)
+        # Filter out the Google Chat "tips" bot (no real human messages)
+        spaces_to_process = [
+            s for s in spaces_to_process
+            if s.get("name") != "spaces/rkhHu8AAAAE"
+            and not s.get("singleUserBotDm", False)
+        ]
+        log.info("Discovered %d DM space(s) to process", len(spaces_to_process))
+
+    state = load_processed_dates(GCS_STATE_BUCKET)  # {space_id: set(dates)}
+
+    # Determine which dates to check (yesterday + any missed within LOOKBACK_DAYS)
+    today = datetime.now(timezone.utc).date()
+    candidate_dates = [
+        (today - timedelta(days=d)).isoformat()
+        for d in range(1, LOOKBACK_DAYS + 1)
+    ]
+
     processed_count = 0
-    for date_str in sorted(dates_to_process):
-        log.info("Processing date: %s", date_str)
-        try:
-            messages = list_messages_for_day(service, CHAT_SPACE_ID, date_str)
-        except Exception as e:
-            log.error("Error fetching messages for %s: %s", date_str, e)
+    for space in spaces_to_process:
+        space_id = space["name"]  # e.g. "spaces/yWe0K8AAAAE"
+        space_key = space_id.replace("/", "_")  # safe dict key
+        processed_for_space = state.get(space_key, set())
+
+        dates_to_process = [d for d in candidate_dates if d not in processed_for_space]
+        if not dates_to_process:
+            log.info("%s: all dates already processed, skipping", space_id)
             continue
 
-        if len(messages) < MIN_MESSAGES:
-            log.info("Skipping %s -- only %d message(s) (below MIN_MESSAGES=%d)",
-                     date_str, len(messages), MIN_MESSAGES)
-            processed_dates.add(date_str)
-            continue
+        members = get_space_members(service, space_id)
+        log.info("%s: members=%s", space_id, members)
 
-        transcript = format_transcript(messages, members, date_str)
-        source_name = f"google-chat-{date_str}.txt"
+        for date_str in sorted(dates_to_process):
+            log.info("%s: processing %s", space_id, date_str)
+            try:
+                messages = list_messages_for_day(service, space_id, date_str)
+            except Exception as e:
+                log.error("%s: error fetching messages for %s: %s", space_id, date_str, e)
+                continue
 
-        if send_to_hermes(transcript, source_name, date_str):
-            processed_dates.add(date_str)
-            processed_count += 1
-            log.info("Processed %s (%d messages)", date_str, len(messages))
-        else:
-            log.warning("Hermes rejected transcript for %s, will retry next run", date_str)
+            if len(messages) < MIN_MESSAGES:
+                log.info("%s: skipping %s -- only %d message(s)", space_id, date_str, len(messages))
+                processed_for_space.add(date_str)
+                continue
 
-    save_processed_dates(GCS_STATE_BUCKET, processed_dates)
-    return (f"Done. Processed {processed_count} day(s).", 200)
+            transcript = format_transcript(messages, members, date_str)
+            # Name includes a short space suffix so Hermes can tell spaces apart
+            space_suffix = space_id.split("/")[-1][:8]
+            source_name = f"google-chat-{space_suffix}-{date_str}.txt"
+
+            if send_to_hermes(transcript, source_name, date_str):
+                processed_for_space.add(date_str)
+                processed_count += 1
+                log.info("%s: sent transcript for %s (%d messages)", space_id, date_str, len(messages))
+            else:
+                log.warning("%s: Hermes rejected %s, will retry next run", space_id, date_str)
+
+        state[space_key] = processed_for_space
+
+    save_processed_dates(GCS_STATE_BUCKET, state)
+    return (f"Done. Processed {processed_count} chat transcript(s).", 200)
 
 
 def list_spaces_helper():
