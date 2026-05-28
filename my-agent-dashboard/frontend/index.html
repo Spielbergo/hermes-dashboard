@@ -533,7 +533,7 @@ var AUTOMATIONS = [
     icon: '&#128172;',
     category: 'Communications',
     desc: 'Reads Google Chat DMs and sends transcripts to Hermes for task extraction. Runs daily; pull manually to process new messages immediately.',
-    schedule: 'Daily 01:00 UTC',
+    schedule: 'Daily 01:00 EST',
     statusFn: null,
     actions: function() {
       return '<span class="pill-orange">&#128344; Scheduled</span><span class="pill-dim">All DM spaces</span><button class="btn ghost sm" id="wf-chat-run-btn" style="padding:0.2rem 0.6rem;font-size:0.72rem">&#9654; Pull Now</button>';

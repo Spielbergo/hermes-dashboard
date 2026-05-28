@@ -11,6 +11,7 @@ services:
       # Drive polling control
       - TRANSCRIPT_PROCESSOR_URL=${TRANSCRIPT_PROCESSOR_URL}
       - TRANSCRIPT_PROCESSOR_SECRET=${TRANSCRIPT_PROCESSOR_SECRET}
+      - CHAT_PROCESSOR_URL=${CHAT_PROCESSOR_URL}
     volumes:
       # WebUI agent — Mike's chat interface (named volume, Docker-managed)
       - hermes-webui-8qvh_hermes-home:/data/webui
