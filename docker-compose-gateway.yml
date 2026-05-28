@@ -18,7 +18,9 @@ services:
       - hermes-net
 
   hermes-webui:
-    image: ghcr.io/nesquena/hermes-webui:latest
+    build:
+      context: .
+      dockerfile: docker/hermes-webui/Dockerfile
     depends_on:
       - hermes-agent
     ports:
@@ -40,6 +42,7 @@ services:
       - HERMES_WEBUI_DEFAULT_WORKSPACE=/workspace
       - HERMES_WEBUI_PASSWORD=${HERMES_WEBUI_PASSWORD}
       - HERMES_SKIP_CHMOD=1
+      - PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
     restart: unless-stopped
     networks:
       - hermes-net
